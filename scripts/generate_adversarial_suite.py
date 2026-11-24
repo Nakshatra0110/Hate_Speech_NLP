@@ -355,28 +355,29 @@ print(f"Wrote {len(lang_id_samples)} language ID samples to {lang_id_file}")
 # =====================================================================
 # 3. GENERATE 10 TEST MEMES IN tests/fixtures/memes/
 # =====================================================================
-def make_meme(filename, text_top, text_bottom, bg_color, text_color, is_hostile, font_size=28, noise=False, rotate=0):
+def make_meme(filename, text_top, text_bottom, bg_color, text_color, is_hostile, font_size=36, noise=False, rotate=0):
     img = Image.new("RGB", (600, 600), color=bg_color)
     draw = ImageDraw.Draw(img)
     
-    # Draw simple decorative banner/shapes
+    try:
+        font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", size=font_size)
+    except Exception:
+        font = ImageFont.load_default()
+
     if noise:
-        # Add salt & pepper noise
         import numpy as np
         arr = np.array(img)
-        noise_arr = np.random.randint(0, 50, arr.shape, dtype='uint8')
+        noise_arr = np.random.randint(0, 40, arr.shape, dtype='uint8')
         arr = np.clip(arr + noise_arr, 0, 255)
         img = Image.fromarray(arr)
         draw = ImageDraw.Draw(img)
 
-    # Use default PIL font or create clear text
-    # Draw top text with black outline
-    def draw_outlined_text(pos, text, f_size=28):
+    def draw_outlined_text(pos, text):
         x, y = pos
-        # Simple simulated bold outline
+        outline_c = (0, 0, 0) if text_color != (0, 0, 0) else (255, 255, 255)
         for dx, dy in [(-2,0),(2,0),(0,-2),(0,2),(-1,-1),(1,1),(-1,1),(1,-1)]:
-            draw.text((x+dx, y+dy), text, fill=(0,0,0) if text_color != (0,0,0) else (255,255,255))
-        draw.text((x, y), text, fill=text_color)
+            draw.text((x+dx, y+dy), text, font=font, fill=outline_c)
+        draw.text((x, y), text, font=font, fill=text_color)
 
     draw_outlined_text((40, 50), text_top)
     if text_bottom:

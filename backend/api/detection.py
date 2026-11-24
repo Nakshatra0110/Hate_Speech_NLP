@@ -1,5 +1,6 @@
 import uuid
 import json
+import numpy as np
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, Tuple
@@ -7,7 +8,10 @@ from fastapi import APIRouter, HTTPException, Depends
 import torch
 import torch.nn.functional as F
 
-from backend.schemas.detection import DetectionRequest, DetectionResponse, ExplanationResponse, TokenAttribution, VisualAttribution
+from backend.schemas.detection import (
+    DetectionRequest, DetectionResponse, ExplanationResponse,
+    TokenAttribution, VisualAttribution, OCRRequest, OCRResponse, OCRLine
+)
 from backend.core.config import settings
 from backend.database.db import get_connection
 
@@ -81,6 +85,43 @@ def get_models(force_reload: bool = False) -> Tuple[Optional[ClassicalBaselineCl
 
     return _classical_model, _transformer_model
 
+@router.post("/ocr", response_model=OCRResponse)
+def extract_ocr_endpoint(req: OCRRequest):
+    """
+    Dedicated OCR endpoint returning detected typography lines with normalized bounding boxes.
+    Enables interactive review and manual editing before detection.
+    """
+    if not req.image_path and not req.image_base64:
+        raise HTTPException(status_code=400, detail="Must provide image_path or image_base64.")
+
+    if req.image_base64 and len(req.image_base64) > 7_000_000:
+        raise HTTPException(status_code=400, detail="Image payload exceeds maximum allowed size of 5 MB.")
+
+    img_input = req.image_path or req.image_base64
+    if req.image_base64:
+        img_props = _image_proc.inspect_and_preprocess(req.image_base64)
+        img_input = img_props["pil_image"]
+
+    res = OCRService.extract_text(img_input)
+    return OCRResponse(
+        status=res.get("status", "ok"),
+        extracted_text=res.get("extracted_text", ""),
+        confidence=res.get("confidence", 0.0),
+        lines=[
+            OCRLine(
+                text=l["text"],
+                confidence=l["confidence"],
+                script=l.get("script", "Latin"),
+                box_px=l.get("box_px"),
+                box_norm=l.get("box_norm"),
+                low_confidence=l.get("low_confidence", False)
+            )
+            for l in res.get("lines", [])
+        ],
+        image_dimensions=res.get("image_dimensions"),
+        engine=res.get("engine", "easyocr_multivariant")
+    )
+
 @router.post("/detect", response_model=DetectionResponse)
 def detect_content(req: DetectionRequest):
     classical_clf, transformer_clf = get_models()
@@ -114,20 +155,37 @@ def detect_content(req: DetectionRequest):
     img_tensor = None
     saved_image_path = req.image_path
 
+    if req.ocr_lines_override:
+        lines_text = " ".join([l.text.strip() for l in req.ocr_lines_override if l.text.strip()])
+        avg_conf = float(np.mean([l.confidence for l in req.ocr_lines_override])) if req.ocr_lines_override else 0.95
+        ocr_result = {
+            "status": "ok",
+            "extracted_text": lines_text,
+            "confidence": round(avg_conf, 3),
+            "lines": [l.model_dump() if hasattr(l, "model_dump") else dict(l) for l in req.ocr_lines_override],
+            "bounding_boxes": [
+                {"box": l.box_px or [0, 0, 0, 0], "text": l.text, "confidence": l.confidence}
+                for l in req.ocr_lines_override
+            ]
+        }
+        if lines_text:
+            modalities_used.append("ocr")
+
     if req.image_path or req.image_base64:
         try:
             img_source = req.image_path or req.image_base64
             img_props = _image_proc.inspect_and_preprocess(img_source)
-            if req.ocr_text and req.ocr_text.strip():
-                ocr_result = {
-                    "extracted_text": req.ocr_text.strip(),
-                    "bounding_boxes": [],
-                    "confidence": 0.99
-                }
-            else:
-                ocr_result = OCRService.extract_text(req.image_path or img_props["pil_image"])
+            if not req.ocr_lines_override:
+                if req.ocr_text and req.ocr_text.strip():
+                    ocr_result = {
+                        "extracted_text": req.ocr_text.strip(),
+                        "bounding_boxes": [],
+                        "confidence": 0.99
+                    }
+                else:
+                    ocr_result = OCRService.extract_text(req.image_path or img_props["pil_image"])
             modalities_used.append("image")
-            if ocr_result["extracted_text"]:
+            if ocr_result["extracted_text"] and "ocr" not in modalities_used:
                 modalities_used.append("ocr")
 
             # Convert processed array [224, 224, 3] to PyTorch tensor [1, 3, 224, 224]
