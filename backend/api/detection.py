@@ -87,6 +87,12 @@ def detect_content(req: DetectionRequest):
     if not req.text and not req.image_path and not req.image_base64:
         raise HTTPException(status_code=400, detail="Must provide at least text or image content.")
 
+    if req.text and len(req.text) > 1000:
+        raise HTTPException(status_code=400, detail="Text length exceeds maximum allowed limit of 1000 characters.")
+
+    if req.image_base64 and len(req.image_base64) > 7_000_000:
+        raise HTTPException(status_code=400, detail="Image payload exceeds maximum allowed size of 5 MB.")
+
     pred_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     modalities_used = []
@@ -147,6 +153,7 @@ def detect_content(req: DetectionRequest):
     active_reg = get_active_model_registry_info()
     active_model_id = req.model_id or active_reg.get("id", "multilingual-transformer-v1")
     model_version = active_reg.get("version", "1.0")
+    decision_band = "normal"
 
     if active_model_id == "classical-tfidf-svm" and classical_clf and classical_clf.is_trained:
         pred_res = classical_clf.predict(full_text)
@@ -168,7 +175,8 @@ def detect_content(req: DetectionRequest):
     else:
         # Default: Multilingual Attention Transformer with Multimodal Fusion if visual present
         if transformer_clf and transformer_clf.is_trained:
-            pred_res = transformer_clf.predict(full_text)
+            pred_res = transformer_clf.predict(full_text, context=ctx_info)
+            decision_band = pred_res.get("decision_band", "normal")
             
             # Incorporate Cross-Modal CNN Feature Fusion when image tensor is available
             if img_tensor is not None:
@@ -190,11 +198,12 @@ def detect_content(req: DetectionRequest):
             else:
                 pred_label = pred_res["label"]
                 confidence = pred_res["confidence"]
-            predict_fn = transformer_clf.predict
+            predict_fn = lambda t: transformer_clf.predict(t, context=ctx_info)
         elif classical_clf and classical_clf.is_trained:
             pred_res = classical_clf.predict(full_text)
             pred_label = pred_res["label"]
             confidence = pred_res["confidence"]
+            decision_band = "normal"
             predict_fn = classical_clf.predict
         else:
             raise HTTPException(status_code=500, detail="No trained model available. Train models in Model Lab.")
@@ -218,7 +227,9 @@ def detect_content(req: DetectionRequest):
             token_attributions=attr_data["token_attributions"],
             faithfulness_score=attr_data["faithfulness_score"],
             ocr_text=ocr_result["extracted_text"],
-            context_data=ctx_info
+            context_data=ctx_info,
+            decision_band=decision_band,
+            aopc_details=attr_data.get("aopc_details")
         )
 
         explanation_obj = ExplanationResponse(
@@ -228,7 +239,7 @@ def detect_content(req: DetectionRequest):
             contextual_evidence=ctx_info if ctx_info["has_context"] else None,
             natural_language_explanation=synth["natural_language_explanation"],
             faithfulness_score=synth["faithfulness_score"],
-            uncertainty_notes="High contextual sensitivity." if confidence < 0.70 else "Grounded in observed token attributions."
+            uncertainty_notes="High contextual sensitivity / low decision margin." if confidence < 0.70 else "Grounded in observed token attributions."
         )
 
     # 6. Persistent DB Record

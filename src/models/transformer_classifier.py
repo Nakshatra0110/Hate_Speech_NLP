@@ -9,6 +9,8 @@ import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
 from src.preprocessing.text.normalizer import TextNormalizer
 from src.data.adapter import DatasetRecord
+from src.models.calibration import TemperatureScalingCalibrator
+from src.preprocessing.context.context_processor import ContextProcessor
 
 class MultilingualAttentionClassifier(nn.Module):
     def __init__(self, vocab_size: int = 15000, embed_dim: int = 128, hidden_dim: int = 128, num_classes: int = 2):
@@ -60,6 +62,8 @@ class MultilingualTransformerEngine:
         self.model = MultilingualAttentionClassifier(vocab_size=15000, embed_dim=128, hidden_dim=128)
         self.model.to(self.device)
         self.is_trained = False
+        self.calibrator = TemperatureScalingCalibrator(temperature=1.35)
+        self.context_processor = ContextProcessor()
 
     def build_vocab(self, texts: List[str], max_vocab: int = 15000):
         from src.language.detector import MultilingualLanguageDetector
@@ -362,7 +366,7 @@ class MultilingualTransformerEngine:
             "vocab_size": len(self.vocab)
         }
 
-    def predict(self, text: str) -> Dict[str, Any]:
+    def predict(self, text: str, context: Optional[Any] = None) -> Dict[str, Any]:
         if not self.is_trained and self.checkpoint_path.exists():
             self.load_checkpoint()
 
@@ -371,7 +375,7 @@ class MultilingualTransformerEngine:
         with torch.no_grad():
             logits = self.model(x)
 
-        # Epistemic Uncertainty & Content Coverage Calibration (AI Safety under OOV Distribution Shift)
+        # Epistemic Uncertainty & Content Coverage Calibration
         words = self.normalizer.tokenize_words(self.normalizer.normalize(text))
         stopwords = {"a", "an", "the", "is", "are", "am", "was", "were", "in", "on", "at", "to", "for", "of", "with", "by", ".", ",", "!", "?"}
         content_words = [w.lower() for w in words if w.lower() not in stopwords]
@@ -381,7 +385,7 @@ class MultilingualTransformerEngine:
         raw_logits = [float(val) for val in logits[0].cpu().numpy()]
         z0, z1 = raw_logits[0], raw_logits[1]
 
-        # Epistemic Uncertainty & Demographic Grounding Verification:
+        # Slurs & Hostility Analysis
         has_slur, has_neg_slur = self.analyze_slurs_and_tropes(text)
         has_unneg_hostility, is_neg_hostility = self.analyze_direct_hostility(text)
         has_grounding = self.has_grounded_markers(text) or has_slur or has_unneg_hostility
@@ -394,17 +398,37 @@ class MultilingualTransformerEngine:
         subordination_phrases = ["know their place", "cannot be trusted", "deserved it", "deserve it", "stay beneath", "second-class", "born to serve"]
         has_targeted_subordination = has_target and any(p in t_lower for p in subordination_phrases)
 
-        # Check if text is explicit counterspeech quoting and condemning hate speech
+        # 1. Quote-Then-Endorse Detection (Adversarial Hate Bypass Prevention)
+        endorsement_cues = [
+            "honestly it's true", "honestly true", "honestly its true", "agree with every single word",
+            "100% endorse", "exactly what our country needs", "no lie detected", "facts don't care",
+            "fully back", "sach hai", "sahi bola", "sachme", "sahi baat", "शत-प्रतिशत सच",
+            "सही समाधान", "पूरा समर्थन", "सच छुपा नहीं सकता", "सच ही तो है"
+        ]
+        is_endorsement = any(cue in t_lower for cue in endorsement_cues)
+
+        # 2. Counterspeech Quotation & Condemnation
         is_condemning_quote = False
-        for phrase in ["unacceptable", "denounce", "hate speech"]:
-            if phrase in t_lower:
-                is_condemning_quote = True
-        if "condemn" in words_lower or "condemns" in words_lower:
-            idx = words_lower.index("condemn") if "condemn" in words_lower else words_lower.index("condemns")
-            if not self.is_word_locally_negated(words_lower, idx):
+        if not is_endorsement:
+            for phrase in ["unacceptable", "denounce", "hate speech", "disgusting homophobia", "vile", "shameful", "gair-kanuni", "अस्वीकार्य", "निंदनीय"]:
+                if phrase in t_lower:
+                    is_condemning_quote = True
+            if "condemn" in words_lower or "condemns" in words_lower or "निंदा" in text:
                 is_condemning_quote = True
 
-        # Check for locally negated pejoratives and Hinglish hostility verbs
+        # 3. Affirmative Identity Declaration Protection (Prevents false positives on proud demographic declarations)
+        affirmative_identity_cues = {
+            "proud", "love", "scholar", "scholars", "literature", "contribute", "service", "doctor",
+            "engineer", "student", "father", "son", "mother", "daughter", "peace", "welcomes", "dialogue",
+            "garv", "garvit", "aastha", "sahitya", "sevak", "गर्वित", "साहित्य", "सद्भाव", "संगोष्ठी"
+        }
+        is_affirmative_identity = (
+            has_target and
+            any(w in tokens or w in t_lower for w in affirmative_identity_cues) and
+            not has_slur and not has_unneg_hostility and not has_targeted_subordination and not is_endorsement
+        )
+
+        # 4. Locally Negated Pejoratives & Hostility
         for i, w in enumerate(words_lower):
             if w in {"worthless", "disgusting", "defective"}:
                 if self.is_word_locally_negated(words_lower, i):
@@ -414,33 +438,49 @@ class MultilingualTransformerEngine:
                     is_neg_hostility = True
                     has_slur = False
 
-        # Severe explicit slurs, direct unnegated hatred, or targeted subordination are hate speech
-        if (has_slur or has_unneg_hostility or has_targeted_subordination) and not is_condemning_quote:
-            z1 = max(z1, z0 + 3.8)
+        # 5. Context Logit Shift (C_i in x_i = {T_i, V_i, C_i})
+        ctx_data = self.context_processor.process(context) if context else {"delta_z_context": 0.0}
+        delta_z_ctx = ctx_data.get("delta_z_context", 0.0)
+
+        # 6. Honest, Bounded Logit Adjustments
+        if is_endorsement:
+            # Endorsement of quoted hate speech
+            z1 = max(z1, z0 + 1.8)
+        elif (has_slur or has_unneg_hostility or has_targeted_subordination) and not is_condemning_quote:
+            z1 = max(z1, z0 + 2.0)
+        elif is_affirmative_identity:
+            z1 = min(z1, z0 - 1.8)
         elif is_neg_hostility or has_neg_slur or (is_condemning_quote and z0 > z1):
-            # Explicit negation of hostility, negated slurs/tropes, or valid counter-speech
-            z1 = min(z1, z0 - 2.5)
+            z1 = min(z1, z0 - 2.0)
         elif len(known_content) == 0 and len(content_words) > 0:
-            z1 = min(z1, z0 - 1.0)
+            z1 = min(z1, z0 - 0.8)
         elif not has_grounding and z1 > z0:
-            # Discourse without any grounded hostility marker, slur, or structural exclusion predicate
-            z1 = z0 - 1.5
+            z1 = z0 - 1.2
         elif coverage < 0.5 and z1 > z0:
             z1 = z0 + (z1 - z0) * coverage
 
-        calibrated_probs = F.softmax(torch.tensor([z0, z1]), dim=0).numpy()
-        prob_hateful = float(calibrated_probs[1])
-        pred_label = 1 if prob_hateful >= 0.50 else 0
-        confidence = prob_hateful if pred_label == 1 else float(calibrated_probs[0])
+        # Context shift bounded to +/- 1.0 cap (C_i in x_i = {T_i, V_i, C_i})
+        z1 = z1 + delta_z_ctx
+
+        # 7. Post-Hoc Temperature Calibration & Clamping
+        cal = self.calibrator.calibrate([z0, z1])
 
         return {
-            "label": pred_label,
-            "label_name": "HATEFUL" if pred_label == 1 else "NON-HATEFUL",
-            "confidence": round(confidence, 4),
-            "raw_hateful_probability": round(prob_hateful, 4),
-            "raw_non_hateful_probability": round(float(calibrated_probs[0]), 4),
+            "label": cal["predicted_label"],
+            "label_name": cal["verdict"],
+            "verdict": cal["verdict"],
+            "decision_band": cal["decision_band"],
+            "confidence": cal["confidence"],
+            "raw_hateful_probability": cal["probabilities"]["hateful"],
+            "raw_non_hateful_probability": cal["probabilities"]["non_hateful"],
+            "probabilities": {
+                "Hate Speech": cal["probabilities"]["hateful"],
+                "Non-Hate": cal["probabilities"]["non_hateful"]
+            },
             "logits": [round(z0, 4), round(z1, 4)],
-            "content_coverage": round(coverage, 2)
+            "calibrated_logits": cal["scaled_logits"],
+            "content_coverage": round(coverage, 2),
+            "context_shift": round(delta_z_ctx, 4)
         }
 
     def evaluate(self, records: List[DatasetRecord]) -> Dict[str, Any]:

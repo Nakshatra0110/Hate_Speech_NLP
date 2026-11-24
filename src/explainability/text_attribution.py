@@ -1,105 +1,100 @@
 from typing import List, Dict, Any, Tuple, Optional
 import numpy as np
-import torch
-import torch.nn.functional as F
 from src.preprocessing.text.normalizer import TextNormalizer
+from src.explainability.faithfulness import FaithfulnessEvaluator
 
 class TextAttributionEngine:
+    """
+    Logit-Scale Leave-One-Out Perturbation Attribution Engine.
+    Operates strictly on the unconstrained logit scale z to eliminate softmax saturation.
+    Computes token-level and multi-word phrase-level delta logits:
+        Delta z = z_1(text) - z_1(text \ {token})
+    Delta > 0: token increases hateful score (positive evidence for hostility).
+    Delta < 0: token decreases hateful score (mitigating evidence / counterspeech).
+    """
     def __init__(self, normalizer: Optional[TextNormalizer] = None):
         self.normalizer = normalizer or TextNormalizer()
 
     def compute_perturbation_attribution(self, text: str, predict_fn) -> Dict[str, Any]:
-        """
-        Leave-One-Out Perturbation Attribution (Model-Agnostic LIME/Shapley surrogate).
-        Measures the change in hateful class probability when each token is removed.
-        Delta > 0 means the token increases hateful probability (positive evidence for hate).
-        Delta < 0 means the token decreases hateful probability (negative evidence for hate / pushes non-hate).
-        """
         words = self.normalizer.tokenize_words(self.normalizer.normalize(text))
         if not words:
-            return {"token_attributions": [], "faithfulness_score": 1.0}
+            return {
+                "token_attributions": [],
+                "faithfulness_score": 1.0,
+                "aopc_details": {},
+                "comprehensiveness": 0.0,
+                "sufficiency": 0.0
+            }
 
         base_res = predict_fn(text)
-        base_prob = base_res.get("raw_hateful_probability", base_res.get("confidence", 0.5))
-        base_logits = base_res.get("logits")
+        base_logits = base_res.get("logits", [0.0, 0.0])
+        z0, z1 = base_logits[0], base_logits[1]
+        target_logit = z1  # Attribute with respect to hate logit z1
 
         raw_pert = []
         for i in range(len(words)):
-            # Leave word i out
             perturbed_words = words[:i] + words[i+1:]
             perturbed_text = " ".join(perturbed_words) if perturbed_words else "[EMPTY]"
             
             p_res = predict_fn(perturbed_text)
-            p_prob = p_res.get("raw_hateful_probability", p_res.get("confidence", 0.5))
-            p_logits = p_res.get("logits")
+            p_logits = p_res.get("logits", [0.0, 0.0])
+            pz1 = p_logits[1]
 
-            dp = float(base_prob - p_prob)
-            dl = float(base_logits[1] - p_logits[1]) if (base_logits and p_logits) else 0.0
-            raw_pert.append((words[i], dp, dl))
+            # Change in hate logit when token i is removed
+            dl = float(target_logit - pz1)
+            raw_pert.append((words[i], dl))
 
-        # Handle Softmax Saturation: when probabilities are at extreme certainty (0.0 or 1.0),
-        # use normalized logit sensitivity so attributions do not vanish into flat zeroes.
-        max_prob_delta = max((abs(r[1]) for r in raw_pert), default=0.0)
-        use_logit_attribution = (max_prob_delta < 0.0005 and base_logits is not None)
+        # Normalize logit sensitivity to [-1.0, +1.0] scale
+        max_abs_dl = max((abs(r[1]) for r in raw_pert), default=1.0)
+        norm_factor = max(0.5, max_abs_dl)
 
-        if use_logit_attribution:
-            max_dl = max((abs(r[2]) for r in raw_pert), default=1.0)
-            norm_factor = max(1.0, max_dl)
-            attributions = []
-            for w, dp, dl in raw_pert:
-                score = round(dl / norm_factor * 0.5, 4)
-                pol = "positive_evidence" if score > 0.01 else ("negative_evidence" if score < -0.01 else "neutral")
-                attributions.append({
-                    "token": w,
-                    "score": score,
-                    "abs_score": abs(score),
-                    "polarity": pol
-                })
-        else:
-            attributions = []
-            for w, dp, dl in raw_pert:
-                pol = "positive_evidence" if dp > 0.001 else ("negative_evidence" if dp < -0.001 else "neutral")
-                attributions.append({
-                    "token": w,
-                    "score": round(dp, 4),
-                    "abs_score": round(abs(dp), 4),
-                    "polarity": pol
-                })
+        attributions = []
+        for w, dl in raw_pert:
+            # Normalized attribution score
+            norm_score = round(dl / norm_factor, 4)
+            # Filter negligible scores
+            if abs(norm_score) < 0.005:
+                norm_score = 0.0
+                pol = "neutral"
+            elif norm_score > 0.0:
+                pol = "positive_evidence"
+            else:
+                pol = "negative_evidence"
 
-        # Calculate Faithfulness Validation (AOPC / Comprehensiveness)
-        pred_label = base_res.get("label", 1 if base_prob >= 0.5 else 0)
-        target_base_prob = base_prob if pred_label == 1 else (1.0 - base_prob)
+            attributions.append({
+                "token": w,
+                "score": norm_score,
+                "raw_delta_logit": round(dl, 4),
+                "abs_score": abs(norm_score),
+                "polarity": pol
+            })
 
-        # Rationale tokens supporting the predicted class:
-        # If predicted HATEFUL (1), sort by highest positive score
-        # If predicted NON-HATEFUL (0), sort by highest negative score (pulls toward non-hate)
-        if pred_label == 1:
-            sorted_indices = np.argsort([a["score"] for a in attributions])[::-1]
-        else:
-            sorted_indices = np.argsort([a["score"] for a in attributions])
+        # Multi-word phrase check (for quoted phrases or multi-word slurs)
+        if len(words) >= 4:
+            for window in [2, 3]:
+                for start_idx in range(len(words) - window + 1):
+                    phrase_tokens = words[start_idx:start_idx+window]
+                    remaining = words[:start_idx] + words[start_idx+window:]
+                    rem_text = " ".join(remaining) if remaining else "[EMPTY]"
+                    p_res = predict_fn(rem_text)
+                    p_logits = p_res.get("logits", [0.0, 0.0])
+                    phrase_dl = float(target_logit - p_logits[1])
+                    if abs(phrase_dl) > 1.2 * sum(abs(a["raw_delta_logit"]) for a in attributions[start_idx:start_idx+window]):
+                        # Interaction effect detected across phrase
+                        for k in range(start_idx, start_idx+window):
+                            boosted = round(phrase_dl / (window * norm_factor), 4)
+                            attributions[k]["score"] = boosted
+                            attributions[k]["polarity"] = "positive_evidence" if boosted > 0 else "negative_evidence"
 
-        k = max(1, int(len(words) * 0.25))
-        top_k_indices = set(sorted_indices[:k])
-        ablated_words = [words[i] for i in range(len(words)) if i not in top_k_indices]
-        ablated_text = " ".join(ablated_words) if ablated_words else "[EMPTY]"
-        ablated_res = predict_fn(ablated_text)
-        ablated_prob = ablated_res.get("raw_hateful_probability", 0.5)
-        target_ablated_prob = ablated_prob if pred_label == 1 else (1.0 - ablated_prob)
-
-        if use_logit_attribution and base_logits and ablated_res.get("logits"):
-            target_idx = pred_label
-            logit_shift = abs(base_logits[target_idx] - ablated_res["logits"][target_idx])
-            faithfulness = min(1.0, max(0.1, logit_shift / (abs(base_logits[target_idx]) + 1e-4)))
-        else:
-            prob_drop = max(0.0, target_base_prob - target_ablated_prob)
-            margin = max(0.05, target_base_prob - 0.50) if target_base_prob > 0.50 else max(0.05, target_base_prob)
-            faithfulness = min(1.0, max(0.0, prob_drop / margin))
+        # Rigorous Faithfulness Evaluation via AOPC
+        aopc_eval = FaithfulnessEvaluator.evaluate_aopc(text, attributions, predict_fn)
+        comp_suff = FaithfulnessEvaluator.evaluate_comprehensiveness_and_sufficiency(text, attributions, predict_fn)
 
         return {
             "token_attributions": attributions,
-            "faithfulness_score": round(float(faithfulness), 4),
-            "top_k_removed_count": k,
-            "baseline_prob": round(float(base_prob), 4),
-            "ablated_prob": round(float(ablated_prob), 4)
+            "faithfulness_score": aopc_eval["aopc_score"],
+            "aopc_details": aopc_eval,
+            "comprehensiveness": comp_suff["comprehensiveness"],
+            "sufficiency": comp_suff["sufficiency"],
+            "base_logits": [round(z0, 4), round(z1, 4)]
         }
-
