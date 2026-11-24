@@ -90,7 +90,8 @@ class OpenAIExplainabilityService:
             "   - 'negative_evidence' (score <= -0.50): mitigating words, counterspeech condemnation, civil rights, or police/law enforcement terms (shown in Green).\n"
             "   - 'neutral' (score 0.0): grammatical stopwords, punctuation, numbers, neutral nouns (people, country, etc.).\n"
             "5. In counterspeech (e.g. quoting a slur to condemn it), the slur is 'positive_evidence' (Red), while condemning words ('unacceptable', 'shameful') are 'negative_evidence' (Green), and the overall verdict is NON-HATEFUL (predicted_label: 0).\n"
-            "6. In news/reporting (e.g. police arrested people for hate speech), 'police' and 'arrested' are 'negative_evidence' (Green), mentioned hate topics are 'positive_evidence' (Red), and news words are 'neutral', with overall verdict NON-HATEFUL (predicted_label: 0).\n\n"
+            "6. In news/reporting (e.g. police arrested people for hate speech), 'police' and 'arrested' are 'negative_evidence' (Green), mentioned hate topics are 'positive_evidence' (Red), and news words are 'neutral', with overall verdict NON-HATEFUL (predicted_label: 0).\n"
+            "7. In multimodal memes or meme templates (e.g. Drake Hotline Bling, contrast memes, or memes where the top panel rejects bad behavior like 'spreading hate speech' and the bottom panel affirms 'no room for racism equality for all'): Such memes are anti-racism counterspeech and MUST be classified as NON-HATEFUL (predicted_label: 0). Mitigating phrases ('equality for all', 'no room for racism') are 'negative_evidence' (Green).\n\n"
             "Return valid JSON matching this schema:\n"
             "{\n"
             "  \"predicted_label\": 0 or 1,\n"
@@ -116,7 +117,7 @@ class OpenAIExplainabilityService:
             f"DETECTOR PREDICTION: {label_name} (Confidence: {confidence*100:.1f}%)\n"
         )
         if ocr_text:
-            user_content += f"IMAGE OCR TEXT: \"{ocr_text}\"\n"
+            user_content += f"IMAGE OCR TYPOGRAPHY (Meme Content): \"{ocr_text}\"\n"
         if context:
             user_content += f"CONVERSATIONAL CONTEXT: \"{context}\"\n"
         

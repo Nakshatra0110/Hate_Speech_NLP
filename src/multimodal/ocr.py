@@ -169,6 +169,7 @@ class OCRService:
             legacy_boxes = [
                 {
                     "box": l["box_px"],
+                    "box_norm": l["box_norm"],
                     "text": l["text"],
                     "confidence": l["confidence"]
                 }

@@ -698,6 +698,27 @@
     validateInput();
   }
 
+  function selectMemePreset(presetKey) {
+    const data = PRESETS[presetKey];
+    if (!data) return;
+
+    state.currentMeme = {
+      file: null,
+      base64: null,
+      path: `/data/raw/images/${data.file}`,
+      caption: data.caption || '',
+      ocr: data.ocr || ''
+    };
+
+    if (el.memePreviewImg) el.memePreviewImg.src = state.currentMeme.path;
+    if (el.memePreviewBox) el.memePreviewBox.style.display = 'flex';
+    if (el.dropzone) el.dropzone.style.display = 'none';
+    if (el.memeBboxOverlay) el.memeBboxOverlay.innerHTML = '';
+
+    triggerOcrForCurrentMeme();
+    validateInput();
+  }
+
   /* ----------------------------------------------------------------------------
      Inline Validation & Run Button State
      ---------------------------------------------------------------------------- */
@@ -1042,7 +1063,7 @@
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
-          AI Verdict Rationale
+          Verdict Rationale
         </div>
         <div class="callout-text">${escapeHtml(natExplanation)}</div>
       `;

@@ -204,8 +204,15 @@ def detect_content(req: DetectionRequest):
     t_ocr_done = time.perf_counter()
 
     # Combine text and OCR text if present
+    if not clean_text and ocr_result["extracted_text"]:
+        clean_text = _normalizer.normalize(ocr_result["extracted_text"])
+        lang_info = MultilingualLanguageDetector.detect(clean_text)
+        lang = lang_info["language"]
+        if clean_text and "text" not in modalities_used:
+            modalities_used.append("text")
+
     full_text = clean_text
-    if ocr_result["extracted_text"]:
+    if ocr_result["extracted_text"] and clean_text != ocr_result["extracted_text"]:
         full_text = f"{clean_text} [OCR: {ocr_result['extracted_text']}]".strip()
 
     # 4. Model Selection & Inference
@@ -333,11 +340,16 @@ def detect_content(req: DetectionRequest):
 
         # 1. Check for OpenAI API integration for Token Heatmap and Crisp Explainability
         openai_res = None
-        if _openai_explainer.is_available() and clean_text:
-            token_list = _normalizer.tokenize_words(_normalizer.normalize(clean_text))
+        ocr_extracted = ocr_result.get("extracted_text", "").strip()
+        if clean_text and ocr_extracted:
+            analysis_text = f"{clean_text} | {ocr_extracted}"
+        else:
+            analysis_text = clean_text or ocr_extracted
+        if _openai_explainer.is_available() and analysis_text:
+            token_list = _normalizer.tokenize_words(_normalizer.normalize(analysis_text))
             ctx_text = ctx_info.get("formatted_context") if ctx_info.get("has_context") else None
             openai_res = _openai_explainer.explain_and_attribute(
-                text=clean_text,
+                text=analysis_text,
                 label=pred_label,
                 confidence=confidence,
                 language=lang,
@@ -361,7 +373,12 @@ def detect_content(req: DetectionRequest):
                 for a in openai_res["token_attributions"]
             ]
             visual_attrs = [
-                VisualAttribution(box=v["box"], region_label=v["region_label"], attribution_score=v["attribution_score"])
+                VisualAttribution(
+                    box=v["box"],
+                    box_norm=v.get("box_norm"),
+                    region_label=v["region_label"],
+                    attribution_score=v["attribution_score"]
+                )
                 for v in VisualAttributionEngine.map_ocr_attributions(ocr_result["bounding_boxes"], openai_res["token_attributions"])
             ]
             nat_lang_exp = openai_res["short_explanation"]
@@ -369,13 +386,18 @@ def detect_content(req: DetectionRequest):
             faithfulness_val = 0.98
         else:
             # Fallback to local XAI perturbation engine & synthesizer
-            attr_data = _xai_engine.compute_perturbation_attribution(clean_text, predict_fn)
+            attr_data = _xai_engine.compute_perturbation_attribution(clean_text or ocr_result.get("extracted_text", ""), predict_fn)
             token_attrs = [
                 TokenAttribution(token=a["token"], score=a["score"], polarity=a["polarity"])
                 for a in attr_data["token_attributions"]
             ]
             visual_attrs = [
-                VisualAttribution(box=v["box"], region_label=v["region_label"], attribution_score=v["attribution_score"])
+                VisualAttribution(
+                    box=v["box"],
+                    box_norm=v.get("box_norm"),
+                    region_label=v["region_label"],
+                    attribution_score=v["attribution_score"]
+                )
                 for v in VisualAttributionEngine.map_ocr_attributions(ocr_result["bounding_boxes"], attr_data["token_attributions"])
             ]
             synth = ExplanationSynthesizer.synthesize(
