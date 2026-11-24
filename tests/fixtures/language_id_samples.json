@@ -1,0 +1,306 @@
+[
+  {
+    "id": "lang_en_01",
+    "text": "The public transportation network connects suburban districts efficiently.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_02",
+    "text": "Artificial intelligence algorithms require rigorous empirical verification.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_03",
+    "text": "Clean water sanitation projects improve community wellness dramatically.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_04",
+    "text": "Freedom of inquiry and philosophical critique are essential to science.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_05",
+    "text": "The international symphony orchestra performed in London yesterday.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_06",
+    "text": "Modern architectural designs emphasize natural lighting and ventilation.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_07",
+    "text": "Biodiversity conservation preserves fragile wetland ecosystems from decay.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_08",
+    "text": "Children who read fiction develop stronger interpersonal empathy.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_09",
+    "text": "The semiconductor manufacturing process requires extreme atmospheric purity.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_10",
+    "text": "Regular cardiovascular exercise reduces hypertension and arterial stress.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_11",
+    "text": "Astronomers observed interstellar dust clouds using orbital infrared telescopes.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_12",
+    "text": "Historical archives preserve ancient legal declarations and treaties.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_13",
+    "text": "Renewable geothermal energy stations supply uninterrupted base load power.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_14",
+    "text": "Transparent governance builds institutional trust among citizens.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_en_15",
+    "text": "Open dialogue between researchers leads to transformative breakthroughs.",
+    "expected_language": "en",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hi_01",
+    "text": "भारत की संस्कृति विविधता में एकता का अप्रतिम उदाहरण प्रस्तुत करती है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_02",
+    "text": "शिक्षा प्रत्येक बालक का मौलिक और संवैधानिक अधिकार है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_03",
+    "text": "पर्यावरण संरक्षण के लिए वृक्षारोपण करना अत्यंत आवश्यक है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_04",
+    "text": "सूर्य की किरणें पृथ्वी पर ऊर्जा का प्रमुख प्राकृतिक स्रोत हैं।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_05",
+    "text": "सत्य और अहिंसा का मार्ग ही समाज में वास्तविक शांति स्थापित कर सकता है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_06",
+    "text": "वैज्ञानिक दृष्टिकोण अपनाने से समाज में अंधविश्वासों का उन्मूलन होता है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_07",
+    "text": "नदियों की स्वच्छता बनाए रखना हम सभी नागरिकों का सामूहिक कर्तव्य है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_08",
+    "text": "कविताओं में मानवीय संवेदनाओं की सुंदर अभिव्यक्ति मिलती है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_09",
+    "text": "स्वास्थ्य ही मनुष्य का सबसे अमूल्य और स्थाई धन है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_10",
+    "text": "कृषि क्षेत्र में आधुनिक तकनीकी नवाचारों से उत्पादन में वृद्धि हुई है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_11",
+    "text": "पुस्तकालयों का विस्तार समाज के बौद्धिक विकास का आधार है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_12",
+    "text": "परिश्रम और लगन से किसी भी कठिन लक्ष्य को प्राप्त किया जा सकता है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_13",
+    "text": "प्राकृतिक सौंदर्य मन को अपार शांति और आनंद की अनुभूति कराता है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_14",
+    "text": "लोकतांत्रिक संस्थाओं की सुदृढ़ता नागरिकों की भागीदारी पर निर्भर है।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hi_15",
+    "text": "योग और ध्यान मानसिक तनाव को कम करने में अत्यंत लाभकारी हैं।",
+    "expected_language": "hi",
+    "script": "Devanagari"
+  },
+  {
+    "id": "lang_hgl_01",
+    "text": "aaj sham ko sabhi dost milkar naye restaurant me dinner karenge.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_02",
+    "text": "kya aapne kal ka cricket match dekha? bahut hi romanchak tha.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_03",
+    "text": "mujhe lagta hai ki hume is problem ko sath milkar solve karna chahiye.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_04",
+    "text": "kal subah office ke liye jaldi nikalna padega kyunki traffic hoga.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_05",
+    "text": "ye movie bohot achhi hai iska soundtrack aur dialogue kamaal ke hai.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_06",
+    "text": "apna kaam time par poora karo aur seniors se guidance lo.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_07",
+    "text": "is baar garmiyo ki chhuttiyo me himachal ghumne ka plan banaya hai.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_08",
+    "text": "padhai ke sath sath sports me participate karna bhi zaroori hai.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_09",
+    "text": "bhai please mujhe assignment submit karne ke liye notes share kar de.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_10",
+    "text": "metro station ke bahar autowale bohot zyada kiraya mang rahe the.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_11",
+    "text": "aaj ka mosam bohot suhana hai halki barish ho rahi hai.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_hgl_12",
+    "text": "hum sabhi milkar diwali celebration ke liye preparation kar rahe hai.",
+    "expected_language": "Hinglish",
+    "script": "Latin"
+  },
+  {
+    "id": "lang_ur_01",
+    "text": "تعلیم انسان کو شعور اور اخلاق کی بلندی عطا کرتی ہے۔",
+    "expected_language": "ur",
+    "script": "Arabic",
+    "is_unsupported": true
+  },
+  {
+    "id": "lang_ur_02",
+    "text": "اردو ادب میں غالب اور اقبال کی شاعری کو لازوال مقام حاصل ہے۔",
+    "expected_language": "ur",
+    "script": "Arabic",
+    "is_unsupported": true
+  },
+  {
+    "id": "lang_ur_03",
+    "text": "محبت اور امن سے ہی انسانی معاشرہ ترقی کی منازل طے کر سکتا ہے۔",
+    "expected_language": "ur",
+    "script": "Arabic",
+    "is_unsupported": true
+  },
+  {
+    "id": "lang_ur_04",
+    "text": "موسم بہار میں گلشن کے پھول دلکش منظر پیش کرتے ہیں۔",
+    "expected_language": "ur",
+    "script": "Arabic",
+    "is_unsupported": true
+  },
+  {
+    "id": "lang_mix_01",
+    "text": "हमारा team effort बहुत strong था so we won the trophy easily.",
+    "expected_language": "hi-en",
+    "script": "Mixed"
+  },
+  {
+    "id": "lang_mix_02",
+    "text": "Research paper का final draft submit कर दिया है hopefully review अच्छा आएगा।",
+    "expected_language": "hi-en",
+    "script": "Mixed"
+  },
+  {
+    "id": "lang_mix_03",
+    "text": "Online lecture attend किया था but internet connectivity issues की वजह से disconnect हो गया।",
+    "expected_language": "hi-en",
+    "script": "Mixed"
+  },
+  {
+    "id": "lang_mix_04",
+    "text": "Data science and machine learning में career opportunities बहुत तेजी से grow कर रही हैं।",
+    "expected_language": "hi-en",
+    "script": "Mixed"
+  }
+]

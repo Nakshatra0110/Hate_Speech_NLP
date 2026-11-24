@@ -1,6 +1,7 @@
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.core.config import settings
+from backend.core.security import verify_admin_token
 
 router = APIRouter(prefix="/api/settings", tags=["Settings"])
 
@@ -17,7 +18,7 @@ def get_system_settings():
         "languages": settings.languages_config.get("languages", {}).get("supported", [])
     }
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(verify_admin_token)])
 def update_system_settings(payload: Dict[str, Any]):
     if "reward_weights" in payload:
         for k, v in payload["reward_weights"].items():

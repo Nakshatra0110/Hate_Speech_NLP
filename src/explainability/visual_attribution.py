@@ -22,6 +22,7 @@ class VisualAttributionEngine:
 
             visual_regions.append({
                 "box": b.get("box", [0, 0, 100, 100]),
+                "box_norm": b.get("box_norm"),
                 "region_label": box_text,
                 "attribution_score": round(float(avg_score), 4),
                 "ocr_confidence": b.get("confidence", 1.0)

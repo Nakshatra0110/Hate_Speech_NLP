@@ -1,8 +1,9 @@
 import json
 from typing import Dict, Any, List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.core.config import settings
 from backend.database.db import get_connection
+from backend.core.security import verify_admin_token
 from src.experiments.runner import ExperimentRunner
 
 router = APIRouter(prefix="/api/experiments", tags=["Experiments"])
@@ -50,7 +51,7 @@ def list_experiments():
         })
     return items
 
-@router.post("/reset")
+@router.post("/reset", dependencies=[Depends(verify_admin_token)])
 def reset_experiments():
     try:
         conn = get_connection()
@@ -61,7 +62,7 @@ def reset_experiments():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/run-all")
+@router.post("/run-all", dependencies=[Depends(verify_admin_token)])
 def run_all_experiments():
     try:
         runner = get_runner()

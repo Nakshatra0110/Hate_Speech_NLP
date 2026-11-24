@@ -1,0 +1,118 @@
+/* ==============================================================================
+   HateLess Design System Tokens
+   Strictly adheres to Cloudflare-inspired technical research design system.
+   ============================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Core Color Palette */
+  --canvas: #FFFFFF;
+  --ink: #1D1D1D;
+  --muted-ink: #4A4A4A;
+  --action: #F6821F;
+  --action-hover: #E57416;
+  --surface-warm: #FFF8F0;
+  --border-light: #E5E5E5;
+  --border-medium: #D1D1D1;
+
+  /* Derived Tokens */
+  --action-text: #B85500; /* 4.8:1 WCAG AA contrast against white */
+  --focus-ring: #1D1D1D;
+  --canvas-subtle: #FAFAFA;
+
+  /* Data-viz Semantics Exception (Visual/Heatmap/Verdict Only) */
+  --viz-hostile: #D92D20;
+  --viz-hostile-bg: rgba(217, 45, 32, 0.10);
+  --viz-hostile-border: rgba(217, 45, 32, 0.35);
+  --viz-mitigating: #1A7F5A;
+  --viz-mitigating-bg: rgba(26, 127, 90, 0.10);
+  --viz-mitigating-border: rgba(26, 127, 90, 0.35);
+  --viz-neutral: #717171;
+  --viz-neutral-bg: rgba(0, 0, 0, 0.04);
+  --viz-neutral-border: #E5E5E5;
+
+  /* Typography Scale */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --type-hero: 700 3rem/1.1 var(--font-family);
+  --type-hero-tracking: -0.02em;
+
+  --type-section: 700 2.25rem/1.15 var(--font-family);
+  --type-section-tracking: -0.01em;
+
+  --type-h3: 600 1.25rem/1.3 var(--font-family);
+  --type-h3-tracking: -0.005em;
+
+  --type-body-large: 400 1.125rem/1.6 var(--font-family);
+  --type-body: 400 1rem/1.6 var(--font-family);
+  --type-small: 400 0.875rem/1.5 var(--font-family);
+  --type-nav: 500 0.875rem/1.4 var(--font-family);
+  --type-label: 600 0.75rem/1.4 var(--font-family);
+  --type-label-tracking: 0.05em;
+
+  /* Layout & Spacing */
+  --container-max-width: 1200px;
+  --section-padding-y: 5rem;
+  --gap-standard: 1.5rem;
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+
+  /* Motion */
+  --transition-timing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-fast: 150ms var(--transition-timing);
+  --transition-normal: 200ms var(--transition-timing);
+  --transition-slow: 250ms var(--transition-timing);
+}
+
+/* Dark Theme Derived from Tokens (Orange preserved as sole interactive accent) */
+[data-theme="dark"] {
+  --canvas: #121212;
+  --canvas-subtle: #181818;
+  --ink: #F2F2F2;
+  --muted-ink: #A6A6A6;
+  --action: #F6821F;
+  --action-hover: #FA9438;
+  --action-text: #F6821F; /* High contrast on dark */
+  --surface-warm: #1F1914;
+  --border-light: #262626;
+  --border-medium: #3E3E3E;
+  --focus-ring: #F2F2F2;
+
+  --viz-hostile: #F87171;
+  --viz-hostile-bg: rgba(248, 113, 113, 0.15);
+  --viz-hostile-border: rgba(248, 113, 113, 0.4);
+  --viz-mitigating: #34D399;
+  --viz-mitigating-bg: rgba(52, 211, 153, 0.15);
+  --viz-mitigating-border: rgba(52, 211, 153, 0.4);
+  --viz-neutral: #888888;
+  --viz-neutral-bg: rgba(255, 255, 255, 0.05);
+  --viz-neutral-border: #333333;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: #121212;
+    --canvas-subtle: #181818;
+    --ink: #F2F2F2;
+    --muted-ink: #A6A6A6;
+    --action: #F6821F;
+    --action-hover: #FA9438;
+    --action-text: #F6821F;
+    --surface-warm: #1F1914;
+    --border-light: #262626;
+    --border-medium: #3E3E3E;
+    --focus-ring: #F2F2F2;
+
+    --viz-hostile: #F87171;
+    --viz-hostile-bg: rgba(248, 113, 113, 0.15);
+    --viz-hostile-border: rgba(248, 113, 113, 0.4);
+    --viz-mitigating: #34D399;
+    --viz-mitigating-bg: rgba(52, 211, 153, 0.15);
+    --viz-mitigating-border: rgba(52, 211, 153, 0.4);
+    --viz-neutral: #888888;
+    --viz-neutral-bg: rgba(255, 255, 255, 0.05);
+    --viz-neutral-border: #333333;
+  }
+}

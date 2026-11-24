@@ -1,0 +1,229 @@
+{
+  "a": {
+    "text": "immigrants are vermin",
+    "context": null,
+    "label": 1,
+    "label_name": "HATEFUL",
+    "confidence": 1.0,
+    "raw_hateful_p": 1.0,
+    "logits": [
+      -11.7109,
+      5.1149
+    ],
+    "elapsed_ms": 15.62,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "immigrants(+0.000)",
+      "are(+0.000)",
+      "vermin(+0.818)"
+    ]
+  },
+  "b": {
+    "text": "Someone wrote \"immigrants are vermin\" which is completely unacceptable racist hate speech.",
+    "context": null,
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 0.9942,
+    "raw_hateful_p": 0.0058,
+    "logits": [
+      1.0388,
+      -4.1115
+    ],
+    "elapsed_ms": 2.15,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "Someone(+0.002)",
+      "wrote(+0.002)",
+      "\"(+0.002)",
+      "immigrants(+0.000)",
+      "are(+0.003)"
+    ]
+  },
+  "c": {
+    "text": "Someone wrote \"immigrants are vermin\" which is completely unacceptable racist hate speech. ... but honestly it's true.",
+    "context": null,
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 0.9945,
+    "raw_hateful_p": 0.0055,
+    "logits": [
+      1.0538,
+      -4.1472
+    ],
+    "elapsed_ms": 3.12,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "Someone(+0.002)",
+      "wrote(+0.002)",
+      "\"(+0.001)",
+      "immigrants(+0.001)",
+      "are(+0.003)"
+    ]
+  },
+  "d": {
+    "text": "ye log desh ke gaddar hai",
+    "context": null,
+    "label": 1,
+    "label_name": "HATEFUL",
+    "confidence": 1.0,
+    "raw_hateful_p": 1.0,
+    "logits": [
+      -8.4672,
+      3.7243
+    ],
+    "elapsed_ms": 2.1,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "ye(+0.010)",
+      "log(+0.000)",
+      "desh(+0.000)",
+      "ke(+0.000)",
+      "gaddar(+0.818)"
+    ]
+  },
+  "e": {
+    "text": "\u092f\u0947 \u0932\u094b\u0917 \u0926\u0947\u0936 \u0915\u0947 \u0917\u0926\u094d\u0926\u093e\u0930 \u0939\u0948\u0902",
+    "context": null,
+    "label": 1,
+    "label_name": "HATEFUL",
+    "confidence": 1.0,
+    "raw_hateful_p": 1.0,
+    "logits": [
+      -16.2548,
+      7.1451
+    ],
+    "elapsed_ms": 1.8,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "\u092f\u0947(+0.000)",
+      "\u0932\u094b\u0917(+0.000)",
+      "\u0926\u0947\u0936(+0.000)",
+      "\u0915\u0947(+0.000)",
+      "\u0917\u0926\u094d\u0926\u093e\u0930(+0.818)"
+    ]
+  },
+  "f": {
+    "text": "I am a proud Muslim.",
+    "context": null,
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 0.8178,
+    "raw_hateful_p": 0.1822,
+    "logits": [
+      0.2841,
+      -1.2171
+    ],
+    "elapsed_ms": 1.6,
+    "faithfulness": 0.0283,
+    "top_tokens": [
+      "I(-0.009)",
+      "am(+0.042)",
+      "a(-0.000)",
+      "proud(+0.074)",
+      "Muslim(+0.074)"
+    ]
+  },
+  "g": {
+    "text": "In historical archives, propaganda used terms like 'subhuman' to systematically dehumanize communities.",
+    "context": "Academic research curriculum on human rights.",
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 1.0,
+    "raw_hateful_p": 0.0,
+    "logits": [
+      2.1195,
+      -8.3644
+    ],
+    "elapsed_ms": 1.48,
+    "faithfulness": 0.3076,
+    "top_tokens": [
+      "In(+0.000)",
+      "historical(-0.002)",
+      "archives(+0.000)",
+      ",(-0.000)",
+      "propaganda(-0.002)"
+    ]
+  },
+  "h_empty": {
+    "text": "In historical archives, propaganda used terms like 'subhuman' to systematically dehumanize communities.",
+    "context": null,
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 1.0,
+    "raw_hateful_p": 0.0,
+    "logits": [
+      2.1195,
+      -8.3644
+    ],
+    "elapsed_ms": 2.29,
+    "faithfulness": 0.3076,
+    "top_tokens": [
+      "In(+0.000)",
+      "historical(-0.002)",
+      "archives(+0.000)",
+      ",(-0.000)",
+      "propaganda(-0.002)"
+    ]
+  },
+  "h_hostile": {
+    "text": "In historical archives, propaganda used terms like 'subhuman' to systematically dehumanize communities.",
+    "context": "Gas them all and finish what was started.",
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 1.0,
+    "raw_hateful_p": 0.0,
+    "logits": [
+      2.1195,
+      -8.3644
+    ],
+    "elapsed_ms": 3.86,
+    "faithfulness": 0.3076,
+    "top_tokens": [
+      "In(+0.000)",
+      "historical(-0.002)",
+      "archives(+0.000)",
+      ",(-0.000)",
+      "propaganda(-0.002)"
+    ]
+  },
+  "i_framing_removed": {
+    "text": "propaganda used terms like 'subhuman' to systematically dehumanize communities.",
+    "context": null,
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 0.9413,
+    "raw_hateful_p": 0.0587,
+    "logits": [
+      0.5544,
+      -2.22
+    ],
+    "elapsed_ms": 5.2,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "propaganda(-0.352)",
+      "used(+0.019)",
+      "terms(+0.019)",
+      "like(-0.009)",
+      "'subhuman'(+0.016)"
+    ]
+  },
+  "i_bare_slurs": {
+    "text": "subhuman dehumanize communities",
+    "context": null,
+    "label": 0,
+    "label_name": "NON-HATEFUL",
+    "confidence": 0.7197,
+    "raw_hateful_p": 0.2803,
+    "logits": [
+      0.193,
+      -0.7501
+    ],
+    "elapsed_ms": 2.26,
+    "faithfulness": 1.0,
+    "top_tokens": [
+      "subhuman(+0.027)",
+      "dehumanize(+0.124)",
+      "communities(-0.385)"
+    ]
+  }
+}
