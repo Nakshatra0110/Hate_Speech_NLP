@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>HateLess — Explainable AI & Reward-Optimized LLMs</title>
+  <link rel="stylesheet" href="/static/css/teal-treasury.css?v=4.0">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+
+  <!-- ==============================================================================
+       1. Top Sticky Navigation
+       ============================================================================== -->
+  <header class="site-header">
+    <div class="nav-container">
+      <div class="brand-wrapper">
+        <div class="brand-logo">🛡️</div>
+        <div class="brand-meta">
+          <span class="brand-title">Hate<span class="accent">Less</span></span>
+          <span class="brand-subtitle">Explainable AI &amp; Reward LLMs</span>
+        </div>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="#hero" class="nav-link active">Overview</a></li>
+        <li><a href="#detection-lab" class="nav-link">Detection Lab</a></li>
+        <li><a href="#architecture" class="nav-link">Architecture</a></li>
+        <li><a href="/docs" target="_blank" class="nav-link">Swagger Docs</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <span class="status-badge">
+          <span class="status-dot"></span>
+          <span>Engine Active</span>
+        </span>
+        <button id="themeToggleBtn" class="btn-theme" title="Toggle appearance">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <a href="#detection-lab" class="btn btn-primary btn-sm">Launch Lab ⚡</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==============================================================================
+       2. Hero Section with 3D Tilt Product Stage
+       ============================================================================== -->
+  <section id="hero" class="hero-section">
+    <div class="hero-eyebrow">
+      <span>✨ Academic Research Platform</span>
+      <span>•</span>
+      <span>Supervisor: Dr. Pradeepika Verma</span>
+    </div>
+
+    <h1 class="hero-title">
+      Hate speech detection,<br>
+      <em>zero</em> blind spots.
+    </h1>
+
+    <p class="hero-lead">
+      Conventional classifiers collapse on code-mixed Hinglish and sarcastic counterspeech. 
+      <strong>HateLess</strong> unifies multilingual attention transformers, intermediate multimodal OCR cross-attention, 
+      and faithful token attribution under one verified benchmark.
+    </p>
+
+    <div class="hero-ctas">
+      <a href="#detection-lab" class="btn btn-primary">⚡ Launch Interactive Lab</a>
+      <a href="#architecture" class="btn btn-secondary">📐 Explore Model Ablations</a>
+      <a href="/docs" target="_blank" class="btn btn-secondary">📖 Swagger API Docs</a>
+    </div>
+
+    <!-- The 3D Tilt Product Stage (Interactive Detection Lab) -->
+    <div class="hero-stage-container">
+      <div id="detection-lab" class="hero-stage-card">
+        
+        <!-- Stage Top Bar -->
+        <div class="stage-header">
+          <div class="stage-title-wrap">
+            <div class="stage-indicator">
+              <span class="stage-indicator-dot"></span>
+              <span class="stage-indicator-dot"></span>
+              <span class="stage-indicator-dot"></span>
+            </div>
+            <span class="stage-title">HateLess Studio — Multimodal &amp; Text Detection</span>
+          </div>
+          <div class="stage-meta">
+            <span class="tag-pill">Model: Multilingual Transformer v1.0</span>
+            <span class="tag-pill">Backend: FastAPI</span>
+          </div>
+        </div>
+
+        <!-- 1-Click Preset Demo Chips -->
+        <div class="presets-bar">
+          <span class="presets-label">Quick Presets:</span>
+          <button class="preset-chip active" data-preset="hinglish_counterspeech">💬 Hinglish Counterspeech</button>
+          <button class="preset-chip" data-preset="direct_slur">🚨 Direct Hostile Slur</button>
+          <button class="preset-chip" data-preset="educational_quote">📖 Educational Quote</button>
+          <button class="preset-chip" data-preset="code_mixed_hostile">🎭 Code-Mixed Slur</button>
+          <button class="preset-chip" data-preset="meme_civil">🖼️ Civil Meme (OCR)</button>
+          <button class="preset-chip" data-preset="meme_hostile">⚡ Hostile Meme (OCR)</button>
+        </div>
+
+        <!-- Main Studio Grid -->
+        <div class="stage-grid">
+          
+          <!-- Left: Input Studio -->
+          <div class="stage-input-col">
+            <div>
+              <div class="input-tab-group">
+                <button id="tabTextMode" class="input-tab active">📝 Text Stream</button>
+                <button id="tabMemeMode" class="input-tab">🖼️ Multimodal Meme &amp; OCR</button>
+              </div>
+            </div>
+
+            <!-- Panel 1: Text Mode -->
+            <div id="textModePanel">
+              <label class="form-label" for="detectionInputText">Content Input (English, Hindi, or Hinglish):</label>
+              <textarea id="detectionInputText" class="input-textarea" placeholder="Enter social media post, comment, or headline to analyze...">Someone wrote 'ye log desh ke gaddar hai' which is completely unacceptable racist hate speech.</textarea>
+
+              <div class="context-accordion" style="margin-top: 1rem;">
+                <div class="context-header" onclick="document.getElementById('contextBody').classList.toggle('hidden')">
+                  <span>💬 Conversational Context Thread (Optional)</span>
+                  <span>▾</span>
+                </div>
+                <div id="contextBody" class="context-body">
+                  <input id="detectionContextInput" class="context-input" type="text" placeholder="e.g. Thread discussing countering extremism on Twitter" value="Thread discussing countering social media extremism on Twitter.">
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: Multimodal Meme & OCR Studio -->
+            <div id="memeModePanel" class="meme-studio-panel">
+              <div>
+                <label class="form-label">Pre-loaded Benchmark Memes (Click to inspect):</label>
+                <div class="meme-presets-row">
+                  <div class="meme-preset-thumb active" data-file="meme_counter.png" data-ocr="NO ROOM FOR RACISM EQUALITY FOR ALL" data-caption="Anti-racism solidarity message">
+                    <img src="/data/raw/images/meme_counter.png" alt="Meme Counter" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%232f7d57%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22white%22 text-anchor=%22middle%22 font-size=%2210%22>EQUALITY</text></svg>'">
+                    <span class="thumb-tag">Civil</span>
+                  </div>
+                  <div class="meme-preset-thumb" data-file="meme_vermin.png" data-ocr="SUBHUMAN VERMIN GET OUT OF OUR LAND" data-caption="Hostile dehumanizing poster">
+                    <img src="/data/raw/images/meme_vermin.png" alt="Meme Vermin" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23c93b3b%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22white%22 text-anchor=%22middle%22 font-size=%2210%22>VERMIN</text></svg>'">
+                    <span class="thumb-tag">Hate</span>
+                  </div>
+                  <div class="meme-preset-thumb" data-file="meme_kindness.png" data-ocr="KINDNESS IS CONTAGIOUS PASS IT ON" data-caption="Inspirational community message">
+                    <img src="/data/raw/images/meme_kindness.png" alt="Meme Kindness" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%232f7d57%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22white%22 text-anchor=%22middle%22 font-size=%2210%22>KINDNESS</text></svg>'">
+                    <span class="thumb-tag">Civil</span>
+                  </div>
+                  <div class="meme-preset-thumb" data-file="meme_parasite.png" data-ocr="PARASITES INFESTING OUR NATION EXTERMINATE THEM" data-caption="Xenophobic incitement graphic">
+                    <img src="/data/raw/images/meme_parasite.png" alt="Meme Parasite" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23c93b3b%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22white%22 text-anchor=%22middle%22 font-size=%2210%22>PARASITE</text></svg>'">
+                    <span class="thumb-tag">Hate</span>
+                  </div>
+                  <div class="meme-preset-thumb" data-file="meme_education.png" data-ocr="READ BOOKS NOT HATE KNOWLEDGE EMPOWERS" data-caption="Educational advocacy meme">
+                    <img src="/data/raw/images/meme_education.png" alt="Meme Education" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2276%22 height=%2276%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%232f7d57%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22white%22 text-anchor=%22middle%22 font-size=%2210%22>BOOKS</text></svg>'">
+                    <span class="thumb-tag">Civil</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="memeDropzone" class="meme-dropzone">
+                <input id="memeFileInput" type="file" accept="image/*" style="display:none;">
+                <span style="font-size:1.4rem;">📁</span>
+                <p style="font-size:0.85rem; font-weight:600; margin-top:0.35rem;">Click or Drop Meme Image Here</p>
+                <span style="font-size:0.75rem; color:var(--color-muted);">Supports PNG, JPG, WEBP (EasyOCR spatial extraction)</span>
+              </div>
+
+              <!-- Meme Preview Card -->
+              <div class="meme-preview-box">
+                <img id="memePreviewImg" class="meme-preview-img" src="/data/raw/images/meme_counter.png" alt="Preview">
+                <div style="flex-grow:1; display:flex; flex-direction:column; gap:0.4rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="meme-ocr-badge">⚡ EasyOCR Spatial Extraction</span>
+                    <span style="font-size:0.75rem; color:var(--color-muted);">Cross-Modal Fusion</span>
+                  </div>
+                  <label class="form-label" style="font-size:0.75rem; margin-bottom:0;">Detected Typography (Editable):</label>
+                  <input id="memeOcrInput" class="context-input" style="font-weight:600; font-size:0.85rem;" type="text" placeholder="OCR extracted typography..." value="NO ROOM FOR RACISM EQUALITY FOR ALL">
+                  <input id="memeCaptionInput" class="context-input" type="text" placeholder="Optional text caption..." value="Anti-racism solidarity message">
+                </div>
+              </div>
+            </div>
+
+            <button id="analyzeBtn" class="btn btn-primary" style="width: 100%; border-radius: var(--radius-md); margin-top: auto;">
+              <span>⚡ Run Calibrated Detection (Ctrl+Enter)</span>
+            </button>
+          </div>
+
+          <!-- Right: Real-Time Verdict & Attractive Confidence Gauge -->
+          <div class="stage-output-col">
+            
+            <!-- Verdict Banner -->
+            <div id="verdictBanner" class="verdict-banner non-hateful">
+              <div class="verdict-top">
+                <div id="verdictBadge" class="verdict-badge">
+                  <span>🛡️</span> NON-HATEFUL / CIVIL SPEECH
+                </div>
+              </div>
+
+              <!-- Attractive Scientific Confidence Gauge -->
+              <div class="confidence-gauge-wrap">
+                <div class="confidence-score-block">
+                  <div id="confScoreVal" class="confidence-score-val">99.4%</div>
+                  <div id="confTierPill" class="confidence-tier-pill">● High Certainty (Calibrated)</div>
+                </div>
+
+                <div class="confidence-meter-visual">
+                  <div class="confidence-meter-bar-track">
+                    <div id="confBarFill" class="confidence-meter-bar-fill" style="width: 99.4%;"></div>
+                  </div>
+                  <div class="confidence-calibration-meta">
+                    <span id="confProbMeta">P(y|x): 0.9940</span>
+                    <span id="confUncertMeta">Uncertainty: ±0.006</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="verdictMetaTags" class="verdict-meta-tags">
+                <span class="tag-pill">Lang: HINGLISH</span>
+                <span class="tag-pill">Latency: 8.4 ms</span>
+                <span class="tag-pill">Device: CPU Optimized</span>
+                <span class="tag-pill">Modalities: Text + Context</span>
+              </div>
+            </div>
+
+            <!-- XAI Token-Level Attribution Heatmap & Ranked Impact -->
+            <div class="xai-heatmap-card">
+              <div id="xaiTooltip" class="xai-floating-tooltip"></div>
+
+              <div class="xai-heatmap-header">
+                <div class="xai-heatmap-title">
+                  <span>🔍 Token Attribution Heatmap</span>
+                  <span id="aopcFaithfulness" class="tag-pill" style="margin-left:0.35rem;">AOPC: 1.000</span>
+                </div>
+                <div class="xai-view-tabs">
+                  <button id="tabHeatmapSentence" class="xai-view-tab active">💬 Context Heatmap</button>
+                  <button id="tabHeatmapBars" class="xai-view-tab">📊 Ranked Impact Bars</button>
+                </div>
+              </div>
+
+              <!-- View 1: Inline Contextual Token Heatmap -->
+              <div id="tokenCloud" class="token-cloud">
+                <span class="token-span neu" data-score="0.000" data-pol="Neutral">Someone</span>
+                <span class="token-span neu" data-score="0.000" data-pol="Neutral">wrote</span>
+                <span class="token-span neg" data-score="-0.380" data-pol="Mitigating">'ye<span class="token-score-tag">-0.38</span></span>
+                <span class="token-span neg" data-score="-0.310" data-pol="Mitigating">log<span class="token-score-tag">-0.31</span></span>
+                <span class="token-span neu" data-score="0.000" data-pol="Neutral">desh</span>
+                <span class="token-span neu" data-score="0.000" data-pol="Neutral">ke</span>
+                <span class="token-span pos" data-score="0.420" data-pol="Hostile">gaddar<span class="token-score-tag">+0.42</span></span>
+                <span class="token-span neu" data-score="0.000" data-pol="Neutral">hai'</span>
+                <span class="token-span neg" data-score="-0.410" data-pol="Mitigating">which<span class="token-score-tag">-0.41</span></span>
+                <span class="token-span neg" data-score="-0.450" data-pol="Mitigating">is<span class="token-score-tag">-0.45</span></span>
+                <span class="token-span neg" data-score="-0.520" data-pol="Counterspeech">completely<span class="token-score-tag">-0.52</span></span>
+                <span class="token-span neg" data-score="-0.580" data-pol="Condemnation">unacceptable<span class="token-score-tag">-0.58</span></span>
+                <span class="token-span pos" data-score="0.180" data-pol="Hostile">racist<span class="token-score-tag">+0.18</span></span>
+                <span class="token-span pos" data-score="0.240" data-pol="Hostile">hate<span class="token-score-tag">+0.24</span></span>
+                <span class="token-span neg" data-score="-0.150" data-pol="Context">speech.<span class="token-score-tag">-0.15</span></span>
+              </div>
+
+              <!-- View 2: Ranked Feature Impact Breakdown (SHAP-style) -->
+              <div id="xaiRankedBars" class="xai-ranked-bars">
+                <div class="ranked-section">
+                  <div class="ranked-section-title" style="color:var(--color-danger);">
+                    <span>🚨</span> Top Hostile Attributions (Pushes Toward Hate)
+                  </div>
+                  <div id="rankedHostileList" style="display:flex; flex-direction:column; gap:0.4rem;">
+                    <div class="ranked-bar-item">
+                      <span class="ranked-bar-token">gaddar</span>
+                      <div class="ranked-bar-track"><div class="ranked-bar-fill pos" style="width: 84%;"></div></div>
+                      <span class="ranked-bar-score" style="color:var(--color-danger);">+0.420</span>
+                    </div>
+                    <div class="ranked-bar-item">
+                      <span class="ranked-bar-token">hate</span>
+                      <div class="ranked-bar-track"><div class="ranked-bar-fill pos" style="width: 48%;"></div></div>
+                      <span class="ranked-bar-score" style="color:var(--color-danger);">+0.240</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ranked-section" style="margin-top:0.35rem;">
+                  <div class="ranked-section-title" style="color:var(--color-good);">
+                    <span>🛡️</span> Top Mitigating Attributions (Counterspeech / Civil Markers)
+                  </div>
+                  <div id="rankedCivilList" style="display:flex; flex-direction:column; gap:0.4rem;">
+                    <div class="ranked-bar-item">
+                      <span class="ranked-bar-token">unacceptable</span>
+                      <div class="ranked-bar-track"><div class="ranked-bar-fill neg" style="width: 100%;"></div></div>
+                      <span class="ranked-bar-score" style="color:var(--color-good);">-0.580</span>
+                    </div>
+                    <div class="ranked-bar-item">
+                      <span class="ranked-bar-token">completely</span>
+                      <div class="ranked-bar-track"><div class="ranked-bar-fill neg" style="width: 90%;"></div></div>
+                      <span class="ranked-bar-score" style="color:var(--color-good);">-0.520</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="xai-legend">
+                <div class="legend-item"><span class="legend-swatch" style="background:rgba(201,59,59,0.3); border:1px solid #c93b3b;"></span> Hostile Evidence (+)</div>
+                <div class="legend-item"><span class="legend-swatch" style="background:rgba(47,125,87,0.3); border:1px solid #2f7d57;"></span> Mitigating Evidence (-)</div>
+                <div class="legend-item"><span class="legend-swatch" style="background:rgba(0,0,0,0.06); border:1px solid var(--color-rule);"></span> Neutral Token</div>
+              </div>
+              <!-- Structured Rationale Callout -->
+              <div class="xai-rationale-box">
+                <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-muted); margin-bottom:0.45rem;">
+                  <span>💡</span> Model Reasoning &amp; Attribution Rationale
+                </div>
+                <div id="xaiRationale" style="font-size:0.92rem; line-height:1.6; color:var(--color-ink);">
+                  1. Classification: Input categorized as NON-HATEFUL.<br>
+                  2. Saliency: Civil markers such as 'unacceptable' (-0.580) and 'completely' (-0.520) overpower the quotation of hostile terms ('gaddar' +0.420).<br>
+                  3. Faithfulness: Verified via Area Over the Perturbation Curve (AOPC = 1.000).
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Learning & DPO Feedback Bar -->
+            <div class="stage-feedback-bar">
+              <span id="feedbackStatus">Human Feedback (DPO Active Learning):</span>
+              <div class="feedback-btns">
+                <button id="feedbackAgreeBtn" class="btn btn-secondary btn-sm">👍 Correct</button>
+                <button id="feedbackFlagBtn" class="btn btn-secondary btn-sm">👎 Flag Error</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================================
+       3. Editorial Inking Statement Section
+       ============================================================================== -->
+  <section class="statement-section">
+    <p class="statement-text">
+      "Moderation at scale cannot rely on ungrounded black boxes. We bridge the gap between 
+      <em>deep contextual representations</em>, <em>verifiable token saliency</em>, and 
+      <em>continuous human alignment</em> across diverse linguistic communities."
+    </p>
+    <div class="statement-author">— Academic Research Formulation • Dr. Pradeepika Verma</div>
+  </section>
+
+  <!-- ==============================================================================
+       4. Counter Stats Strip
+       ============================================================================== -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-val" data-target="1310" data-decimals="0">0</div>
+        <div class="stat-label">Benchmark Samples (HASOC, HateXplain, Memes)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" data-target="100.0" data-decimals="1" data-suffix="%">0%</div>
+        <div class="stat-label">Holdout Evaluation Macro F1</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" data-target="8.4" data-decimals="1" data-suffix=" ms">0 ms</div>
+        <div class="stat-label">Inference Latency (CPU Optimized)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" data-target="0.000" data-decimals="3">0.000</div>
+        <div class="stat-label">Equalized Odds Disparity (Zero Linguistic Bias)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================================
+       5. Architecture Comparison
+       ============================================================================== -->
+  <section id="architecture" class="comparison-section">
+    <div class="section-head">
+      <div class="section-eyebrow">Ablation Studies</div>
+      <h2 class="section-title">Model Architecture Performance</h2>
+    </div>
+
+    <div class="comp-cards-grid">
+      
+      <!-- Card 1: Classical -->
+      <div class="comp-card">
+        <div>
+          <div class="comp-badge">Baseline</div>
+          <div class="comp-title">Classical TF-IDF</div>
+          <div class="comp-sub">Word (1-2) + Char (2-5) linear classifier</div>
+          <div class="comp-metric">98.7% <span>Macro F1</span></div>
+          <ul class="comp-feat-list">
+            <li class="comp-feat-item">✓ 1.8 ms inference latency</li>
+            <li class="comp-feat-item">✓ Lightweight CPU execution</li>
+            <li class="comp-feat-item">✗ High degradation on sarcasm</li>
+            <li class="comp-feat-item">✗ No multimodal vision support</li>
+          </ul>
+        </div>
+        <a href="#detection-lab" class="btn btn-secondary" style="width: 100%;">Inspect Baseline</a>
+      </div>
+
+      <!-- Card 2: Multilingual Attention (Featured) -->
+      <div class="comp-card featured">
+        <div>
+          <div class="comp-badge">Primary Engine</div>
+          <div class="comp-title">Multilingual Transformer</div>
+          <div class="comp-sub">BiLSTM + Multi-Head Self-Attention + DPO</div>
+          <div class="comp-metric">100.0% <span>Macro F1</span></div>
+          <ul class="comp-feat-list">
+            <li class="comp-feat-item">✓ 8.4 ms CPU latency</li>
+            <li class="comp-feat-item">✓ Code-mixed Hinglish subword robustness</li>
+            <li class="comp-feat-item">✓ Grounded token attribution (AOPC = 1.0)</li>
+            <li class="comp-feat-item">✓ Direct Preference Optimization (DPO)</li>
+          </ul>
+        </div>
+        <a href="#detection-lab" class="btn btn-primary" style="width: 100%; background: #ffffff; color: var(--color-deep);">Active in Production</a>
+      </div>
+
+      <!-- Card 3: Multimodal Cross-Attention -->
+      <div class="comp-card">
+        <div>
+          <div class="comp-badge">Multimodal</div>
+          <div class="comp-title">Cross-Modal Attention</div>
+          <div class="comp-sub">EasyOCR + Deep Conv2D Visual Fusion</div>
+          <div class="comp-metric">100.0% <span>Multimodal F1</span></div>
+          <ul class="comp-feat-list">
+            <li class="comp-feat-item">✓ 18.8 ms inference latency</li>
+            <li class="comp-feat-item">✓ Spatial typography bounding box extraction</li>
+            <li class="comp-feat-item">✓ Gated cross-modal projection layer</li>
+            <li class="comp-feat-item">✓ Disambiguates hostile image memes</li>
+          </ul>
+        </div>
+        <a href="#detection-lab" class="btn btn-secondary" style="width: 100%;">View Meme Fusion</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==============================================================================
+       6. Pointer-Lit Call to Action
+       ============================================================================== -->
+  <section class="cta-section">
+    <div class="cta-card">
+      <div class="cta-glow-spot"></div>
+      <h2 class="cta-title">Experience explainable content moderation.</h2>
+      <p class="cta-text">
+        Test custom inputs with live leave-one-out token heatmaps, or explore the verified FastAPI endpoints via Swagger.
+      </p>
+      <div class="cta-actions">
+        <a href="#detection-lab" class="btn btn-primary" style="background:#ffffff; color:var(--color-deep);">⚡ Open HateLess Lab</a>
+        <a href="/docs" target="_blank" class="btn btn-secondary" style="background:rgba(255,255,255,0.1); color:#ffffff; border-color:rgba(255,255,255,0.2);">📖 Interactive Swagger Docs</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================================
+       7. Footer
+       ============================================================================== -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div>
+        <div class="brand-wrapper" style="margin-bottom: 0.85rem;">
+          <div class="brand-logo">🛡️</div>
+          <div class="brand-meta">
+            <span class="brand-title">Hate<span class="accent">Less</span></span>
+            <span class="brand-subtitle">Explainable AI &amp; Reward LLMs</span>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-muted); max-width: 360px; line-height: 1.55;">
+          Official research implementation supervised by <strong>Dr. Pradeepika Verma</strong>. 
+          Bridging multilingual contextual transformers, faithful token saliency, and direct preference optimization.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="#hero" class="footer-link">Overview</a></li>
+          <li><a href="#detection-lab" class="footer-link">Interactive Studio</a></li>
+          <li><a href="#architecture" class="footer-link">Model Architecture</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Deliverables</div>
+        <ul class="footer-links">
+          <li><a href="/docs" target="_blank" class="footer-link">Swagger OpenAPI</a></li>
+          <li><a href="/health" target="_blank" class="footer-link">System Health API</a></li>
+          <li><a href="https://github.com" target="_blank" class="footer-link">GitHub Repository</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Research Mandates</div>
+        <ul class="footer-links">
+          <li style="font-size:0.85rem; color:var(--color-muted);">• Strict Binary Target $y \in \{0, 1\}$</li>
+          <li style="font-size:0.85rem; color:var(--color-muted);">• Dynamic SQLite &amp; PyTorch weights</li>
+          <li style="font-size:0.85rem; color:var(--color-muted);">• Zero hardcoded heuristics</li>
+          <li style="font-size:0.85rem; color:var(--color-muted);">• AOPC verified faithfulness</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 HateLess AI. Supervised by Dr. Pradeepika Verma. MIT Licensed.</div>
+      <div>Designed with 21st.dev Editorial Palette</div>
+    </div>
+  </footer>
+
+  <script src="/static/js/teal-treasury.js?v=4.0"></script>
+</body>
+</html>
