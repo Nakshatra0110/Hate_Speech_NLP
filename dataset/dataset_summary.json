@@ -1,0 +1,42 @@
+{
+  "dataset_name": "HateLess Unified Multilingual Hate Speech Dataset",
+  "total_samples": 1310,
+  "split_counts": {
+    "train": 916,
+    "val": 195,
+    "test": 199
+  },
+  "class_distribution": {
+    "NON-HATEFUL": 725,
+    "HATEFUL": 585
+  },
+  "language_distribution": {
+    "en": 981,
+    "hi": 147,
+    "hi-en": 182
+  },
+  "modality_distribution": {
+    "text": 1260,
+    "meme": 50
+  },
+  "corpora_distribution": {
+    "HASOC-2021": 840,
+    "HateXplain": 210,
+    "Subtle-Structural-Benchmark": 210,
+    "Multimodal-Memes": 50
+  },
+  "nlp_techniques_applied": [
+    "Unicode NFKC Normalization",
+    "Zero-width character stripping",
+    "Homoglyph and leetspeak translation",
+    "Phonetic repeated character elongation collapse",
+    "CamelCase hashtag segmentation",
+    "URL and social mention tokenization",
+    "Multilingual word and sentence tokenization",
+    "English NLTK WordNet Lemmatization with POS code mapping",
+    "Devanagari Hindi morphological affix-based lemmatization",
+    "Romanized Hinglish plural and verbal inflection lemmatization",
+    "Stopword filtering across English, Hindi, and Hinglish",
+    "Part-of-Speech (POS) categorization"
+  ]
+}

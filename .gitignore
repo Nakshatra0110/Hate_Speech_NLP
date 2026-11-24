@@ -59,7 +59,12 @@ desktop.ini
 ~$*
 
 
+<<<<<<< HEAD
 models/easyocr/craft_mlt_25k.pth
 models/easyocr/devanagari.pth
 models/easyocr/english_g2.pth
 .env
+=======
+.env
+/models/easyocr
+>>>>>>> 97e0cfc710ecedfc61f9fbac755417bc446a7021

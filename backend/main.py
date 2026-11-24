@@ -2,11 +2,15 @@ import os
 import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 
 # Add project root to sys.path so `python backend/main.py` works directly
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+# Load environment variables from .env
+load_dotenv(PROJECT_ROOT / ".env", override=True)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
