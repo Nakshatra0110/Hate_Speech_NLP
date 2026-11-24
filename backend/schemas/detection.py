@@ -10,7 +10,7 @@ class OCRLine(BaseModel):
     text: str
     confidence: float
     script: str = "Latin"
-    box_px: Optional[List[int]] = None # [ymin, xmin, ymax, xmax]
+    box_px: Optional[List[Union[int, float]]] = None # [ymin, xmin, ymax, xmax]
     box_norm: Optional[List[float]] = None # [ymin/H, xmin/W, ymax/H, xmax/W] in [0, 1]
     low_confidence: bool = False
 

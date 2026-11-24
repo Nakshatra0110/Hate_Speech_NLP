@@ -12,19 +12,22 @@ class MultilingualLanguageDetector:
         "aur", "ya", "lekin", "par", "kyunki", "isliye", "bhi", "toh",
         "ka", "ki", "ke", "ko", "se", "mein", "pe", "tak",
         # Question words
-        "kya", "kyu", "kyun", "kaise", "kaha", "kahan", "kab", "kaun", "kitna",
+        "kya", "kyu", "kyun", "kaise", "kaha", "kahan", "kab", "kaun", "kitna", "kitne",
         # Common verbs & auxiliary verbs
-        "karo", "karna", "karte", "karti", "kiya", "raha", "rahe", "rahi", "hoga", "honge",
+        "karo", "karna", "karte", "karti", "kiya", "raha", "rahe", "rahi", "hoga", "honge", "hogi",
         "dekh", "dekho", "bol", "bolo", "bolte", "likha", "likho", "padho", "jao", "aao",
-        "khatam", "maro", "marna", "nikalo", "bhejo", "chhoro", "rok", "roko", "phenko",
+        "khatam", "maro", "marna", "nikalo", "bhejo", "chhoro", "rok", "roko", "phenko", "sabak", "sikhao",
+        "hona", "honi", "chahiye", "suno", "bataye", "batao", "samajhna", "pasand",
         # Conversational & affective nouns / adverbs
-        "bhai", "yaar", "dost", "desh", "deshvasi", "deshdrohi", "gaddar", "gaddaro",
-        "aukaat", "aukat", "sharam", "sharmnak", "sach", "sacchai", "galat", "sahi",
+        "bhai", "yaar", "dost", "desh", "deshvasi", "deshdrohi", "gaddar", "gaddaro", "gaddaron",
+        "aukaat", "aukat", "sharam", "sharmnak", "sach", "sacchai", "galat", "sahi", "watan", "mohabbat",
         "bazaar", "ghar", "shahar", "gao", "gaon", "samaj", "samudaay", "bheed", "swasthya",
-        "khana", "paani", "pyaar", "nafrat", "khel", "match", "shandar", "mast", "achha", "accha",
+        "khana", "paani", "pyaar", "nafrat", "khel", "match", "shandar", "mast", "achha", "accha", "badhiya",
         # Slurs and abuse tokens in Hinglish
-        "chamar", "bhangi", "mulla", "mulle", "katwe", "katwa", "jihadi", "suar", "kutto", "kutte",
-        "saala", "saale", "kamine", "kaminon", "haramkhor", "harami", "madarchod", "behenchod"
+        "chamar", "chamaro", "chamaron", "bhangi", "bhangiyo", "bhangiyon",
+        "mulla", "mulle", "mullo", "mullon", "katwe", "katwa", "katwo", "katwon",
+        "jihadi", "jihadis", "jihadiyo", "jihadiyon", "suar", "suaro", "suaron", "kutto", "kutte", "kutton",
+        "saala", "saale", "kamine", "kaminon", "haramkhor", "harami", "madarchod", "behenchod", "chutiya", "chutiyon"
     }
 
     @classmethod
@@ -94,7 +97,7 @@ class MultilingualLanguageDetector:
             is_cm = True
             conf = round(0.80 + (dev_ratio * latin_ratio), 3)
         elif latin_ratio > 0.60:
-            if hinglish_ratio >= 0.15:
+            if hinglish_ratio >= 0.12 or (hinglish_hits >= 2) or (hinglish_hits >= 1 and len(tokens) <= 6):
                 lang = "hi-en"
                 script = "Latin (Romanized Hindi / Hinglish)"
                 is_cm = True

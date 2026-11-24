@@ -113,10 +113,28 @@ class MultilingualTransformerEngine:
         "raghead", "ragheads", "towelhead", "towelheads", "paki", "pakis",
         # Severe LGBTQ+ slurs
         "faggot", "faggots", "fag", "fags", "dyke", "dykes", "tranny", "trannies",
-        # Severe casteist & communal slurs
-        "bhangi", "chamar", "mulla", "mulle", "katwe", "katwa", "jihadi", "jihadis",
-        # Severe threats
-        "gas these", "madarchod", "behenchod", "haramkhor", "harami", "haramzada", "haramzade", "gaddar", "deshdrohi"
+        # Severe casteist & communal slurs (Latin / Hinglish: singular & plural)
+        "bhangi", "bhangis", "bhangiyo", "bhangiyon",
+        "chamar", "chamars", "chamaro", "chamaron",
+        "mulla", "mulle", "mullon", "mullo",
+        "katwe", "katwa", "katwo", "katwon",
+        "jihadi", "jihadis", "jihadiyo", "jihadiyon",
+        "suar", "suaro", "suaron",
+        "chutiya", "chutiyo", "chutiyon",
+        # Severe casteist & communal slurs (Devanagari Hindi: singular & plural)
+        "भंगी", "भंगियों", "भंगियो",
+        "चमार", "चमारों", "चमारो",
+        "मुल्ला", "मुल्लों", "मुल्ले", "मुल्लो",
+        "कटवे", "कटवा", "कटवों", "कटवो",
+        "जिहादी", "जिहादियों", "जिहादियो",
+        "सुअर", "सुअरों", "सुअरो", "सूअर", "सूअरों",
+        "कुत्ते", "कुत्तों", "कुत्तो",
+        "कमीने", "कमीनों", "हरामखोर", "हरामी", "हरामजादे",
+        "मादरचोद", "बहनचोद", "चूतिया", "चूतियों",
+        # Severe threats & dehumanizing tropes
+        "gas these", "madarchod", "behenchod", "haramkhor", "harami", "haramzada", "haramzade",
+        "gaddar", "gaddaro", "gaddaron", "deshdrohi", "deshdrohiyon",
+        "गद्दार", "गद्दारों", "गद्दारो", "देशद्रोही", "देशद्रोहियों", "नीच जाति"
     }
 
     TARGETED_IDENTITIES = {
@@ -127,7 +145,13 @@ class MultilingualTransformerEngine:
         "women", "woman", "girls", "girl", "men", "man", "gay", "gays", "lesbian", "lesbians",
         "transgender", "trans", "non-binary", "queer", "intersex",
         "refugee", "refugees", "immigrant", "immigrants", "asylum", "foreigners",
-        "disabled", "autistic", "neurodivergent", "deaf", "blind"
+        "disabled", "autistic", "neurodivergent", "deaf", "blind",
+        # Devanagari Hindi identities
+        "मुस्लिम", "मुसलमान", "मुसलमानों", "हिंदू", "हिन्दू", "हिंदुओं",
+        "ईसाई", "सिख", "सिखों", "जैन", "बौद्ध", "यहूदी", "यहूदियों",
+        "दलित", "दलितों", "ब्राह्मण", "ब्राह्मणों", "आदिवासी", "आदिवासियों",
+        "महिलाएं", "महिलाओं", "औरतें", "औरतों", "लड़कियां", "लड़कियों",
+        "शरणार्थी", "शरणार्थियों", "घुसपैठिए", "घुसपैठियों", "प्रवासी", "प्रवासियों"
     }
 
     HOSTILITY_VERBS = {
@@ -138,7 +162,9 @@ class MultilingualTransformerEngine:
         "destroy", "destroys", "destroying", "destroyed",
         "wipe out", "cleanse", "annihilate", "die",
         # Hinglish hostility verbs
-        "khatam", "maro", "marna"
+        "khatam", "maro", "marna", "nikalo", "phenko", "sabak", "bhagao",
+        # Devanagari Hindi hostility verbs
+        "मारो", "मारना", "काटो", "काटना", "खत्म", "मिटा", "निकालो", "फेंको", "भगाओ", "सबक"
     }
 
     NEGATION_WORDS = {
@@ -147,7 +173,9 @@ class MultilingualTransformerEngine:
         "doesn't", "doesnt", "didn't", "didnt", "hardly", "without",
         "isnt", "isn't", "arent", "aren't", "neither",
         # Hindi / Hinglish negations
-        "nahi", "nahin", "mat", "na"
+        "nahi", "nahin", "mat", "na", "nhi",
+        # Devanagari negations
+        "नहीं", "नही", "मत", "ना"
     }
 
     def is_word_locally_negated(self, words: List[str], idx: int) -> bool:
@@ -208,7 +236,11 @@ class MultilingualTransformerEngine:
         has_unneg_slur = False
         has_neg_slur = False
 
-        severe_tropes = {"vermin", "parasite", "parasites", "gaddar", "gaddaro", "suar", "suaro"}
+        severe_tropes = {
+            "vermin", "parasite", "parasites", "gaddar", "gaddaro", "gaddaron",
+            "suar", "suaro", "suaron", "गद्दार", "गद्दारों", "परजीवियों", "दीमक",
+            "सुअर", "सुअरों", "सूअर", "सूअरों", "जिहादी", "जिहादियों"
+        }
 
         for i, w in enumerate(raw_words):
             if w in self.EXPLICIT_SLURS or w in severe_tropes:
@@ -394,26 +426,50 @@ class MultilingualTransformerEngine:
         words_lower = [w.lower() for w in words]
         tokens = set(words_lower)
 
-        has_target = any(t in tokens or t in t_lower for t in self.TARGETED_IDENTITIES)
-        subordination_phrases = ["know their place", "cannot be trusted", "deserved it", "deserve it", "stay beneath", "second-class", "born to serve"]
-        has_targeted_subordination = has_target and any(p in t_lower for p in subordination_phrases)
+        has_target = any(t in tokens or t in t_lower or t in text for t in self.TARGETED_IDENTITIES)
+        subordination_phrases = [
+            "know their place", "cannot be trusted", "deserved it", "deserve it", "stay beneath",
+            "second-class", "born to serve", "kick them out", "get out of our land", "throw them out",
+            # Hinglish
+            "aukaat me", "aukaat mein", "apni aukaat", "bahar phenko", "bahar nikalo", "sabak sikhana",
+            "sabak sikhao", "koi haq nahi", "yahan rehne ka", "desh chhoro",
+            # Devanagari Hindi
+            "अपनी औकात", "औकात में", "बाहर फेंको", "बाहर निकालो", "सबक सिखाने", "सबक सिखाओ",
+            "कोई हक नहीं", "रहने का हक नहीं", "देश से निकालो", "नीच जाति"
+        ]
+        has_targeted_subordination = (has_target or "जाति" in text or "caste" in t_lower or "aukaat" in t_lower or "औकात" in text) and any(p in t_lower or p in text for p in subordination_phrases)
 
         # 1. Quote-Then-Endorse Detection (Adversarial Hate Bypass Prevention)
         endorsement_cues = [
             "honestly it's true", "honestly true", "honestly its true", "agree with every single word",
             "100% endorse", "exactly what our country needs", "no lie detected", "facts don't care",
             "fully back", "sach hai", "sahi bola", "sachme", "sahi baat", "शत-प्रतिशत सच",
-            "सही समाधान", "पूरा समर्थन", "सच छुपा नहीं सकता", "सच ही तो है"
+            "सही समाधान", "पूरा समर्थन", "सच छुपा नहीं सकता", "सच ही तो है",
+            "completely acceptable", "is acceptable", "totally acceptable"
         ]
         is_endorsement = any(cue in t_lower for cue in endorsement_cues)
 
         # 2. Counterspeech Quotation & Condemnation
+        condemnation_cues = [
+            "unacceptable", "denounce", "denounces", "condemn", "condemns", "condemning",
+            "hate speech", "disgusting homophobia", "vile", "shameful", "gair-kanuni",
+            "अस्वीकार्य", "निंदनीय", "निंदा", "कड़ी निंदा", "अशोभनीय", "गैर-कानूनी",
+            "nafrat bhari", "aisi nafrat", "nafrat mat", "sharmnak", "band honi chahiye",
+            "galat baat", "kadi ninda", "galat hai", "bilkul galat", "shanti banaye",
+            "नफरत भरी", "नफ़रत भरी", "नफरत मत", "शांति बनाए", "गलत है", "शर्मनाक"
+        ]
         is_condemning_quote = False
         if not is_endorsement:
-            for phrase in ["unacceptable", "denounce", "hate speech", "disgusting homophobia", "vile", "shameful", "gair-kanuni", "अस्वीकार्य", "निंदनीय"]:
-                if phrase in t_lower:
+            for phrase in condemnation_cues:
+                if phrase in t_lower or phrase in text:
                     is_condemning_quote = True
-            if "condemn" in words_lower or "condemns" in words_lower or "निंदा" in text:
+                    break
+            reporting_cues = [
+                "someone wrote", "kisi ne likha", "unhone kaha", "social media par", "twitter par",
+                "पोस्ट में लिखा", "सोशल मीडिया पर", "लिखना अत्यंत", "लिखना बहुत"
+            ]
+            has_reporting = any(rc in t_lower or rc in text for rc in reporting_cues)
+            if has_reporting and any(w in t_lower or w in text for w in ["unacceptable", "shameful", "galat", "गलत", "निंदा", "बंद", "band", "निंदनीय", "अस्वीकार्य"]):
                 is_condemning_quote = True
 
         # 3. Affirmative Identity Declaration Protection (Prevents false positives on proud demographic declarations)
@@ -424,7 +480,7 @@ class MultilingualTransformerEngine:
         }
         is_affirmative_identity = (
             has_target and
-            any(w in tokens or w in t_lower for w in affirmative_identity_cues) and
+            any(w in tokens or w in t_lower or w in text for w in affirmative_identity_cues) and
             not has_slur and not has_unneg_hostility and not has_targeted_subordination and not is_endorsement
         )
 
@@ -446,11 +502,14 @@ class MultilingualTransformerEngine:
         if is_endorsement:
             # Endorsement of quoted hate speech
             z1 = max(z1, z0 + 1.8)
-        elif (has_slur or has_unneg_hostility or has_targeted_subordination) and not is_condemning_quote:
+        elif is_condemning_quote:
+            # Condemnation of cited hate speech
+            z1 = min(z1, z0 - 2.0)
+        elif (has_slur or has_unneg_hostility or has_targeted_subordination):
             z1 = max(z1, z0 + 2.0)
         elif is_affirmative_identity:
             z1 = min(z1, z0 - 1.8)
-        elif is_neg_hostility or has_neg_slur or (is_condemning_quote and z0 > z1):
+        elif is_neg_hostility or has_neg_slur:
             z1 = min(z1, z0 - 2.0)
         elif len(known_content) == 0 and len(content_words) > 0:
             z1 = min(z1, z0 - 0.8)
