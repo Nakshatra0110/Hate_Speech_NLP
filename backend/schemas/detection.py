@@ -47,6 +47,34 @@ class VisualAttribution(BaseModel):
     region_label: Optional[str] = None
     attribution_score: float = 0.0
 
+class FormalInput(BaseModel):
+    T: str = Field(..., description="Linguistic text content")
+    V: Dict[str, Any] = Field(default_factory=dict, description="Visual typography & features")
+    C: Dict[str, Any] = Field(default_factory=dict, description="Contextual conversation & framing")
+
+class ShapleyStreams(BaseModel):
+    phi_T: float = Field(..., description="Shapley attribution of text stream")
+    phi_V: float = Field(..., description="Shapley attribution of visual stream")
+    phi_C: float = Field(..., description="Shapley attribution of context stream")
+    baseline_z: float = Field(..., description="Neutral baseline logit z(∅)")
+    final_z: float = Field(..., description="Final output logit z(T, V, C)")
+    sum_check: float = Field(..., description="Sum of phi_i values")
+    efficiency_gap: float = Field(default=0.0, description="Absolute difference |sum(phi) - delta_z| (< 1e-6)")
+
+class WaterfallStep(BaseModel):
+    step_index: int
+    name: str
+    stream: str # "baseline", "text", "visual", "context"
+    delta_z: float
+    cumulative_z: float
+    probability: float
+
+class ExplanationStep(BaseModel):
+    step: int
+    title: str
+    body: str
+    detail: Optional[str] = None
+
 class ExplanationResponse(BaseModel):
     token_attributions: List[TokenAttribution] = []
     visual_attributions: List[VisualAttribution] = []
@@ -55,15 +83,25 @@ class ExplanationResponse(BaseModel):
     natural_language_explanation: str
     faithfulness_score: float # AOPC faithfulness metric
     uncertainty_notes: Optional[str] = None
+    formal_input: Optional[FormalInput] = None
+    shapley_streams: Optional[ShapleyStreams] = None
+    stream_agreement: Optional[str] = "concordant"
+    steps: Optional[List[ExplanationStep]] = []
+    waterfall: Optional[List[WaterfallStep]] = []
 
 class DetectionResponse(BaseModel):
     prediction_id: str
     predicted_label: int = Field(..., description="0 for Non-Hateful, 1 for Hateful")
     label_name: str = Field(..., description="'NON-HATEFUL', 'HATEFUL', or 'NEEDS REVIEW'")
     confidence: float
+    verdict: Optional[str] = None
+    decision_band: Optional[str] = None
+    probabilities: Optional[Dict[str, float]] = None
+    logits: Optional[List[float]] = None
     model_id: str
     model_version: str
     language_detected: str
     modalities_used: List[str]
     explanation: Optional[ExplanationResponse] = None
+    timing_ms: Optional[Dict[str, float]] = None
     created_at: str

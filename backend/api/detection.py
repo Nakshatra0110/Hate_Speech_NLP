@@ -1,16 +1,19 @@
 import uuid
 import json
+import time
+import math
 import numpy as np
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 from fastapi import APIRouter, HTTPException, Depends
 import torch
 import torch.nn.functional as F
 
 from backend.schemas.detection import (
     DetectionRequest, DetectionResponse, ExplanationResponse,
-    TokenAttribution, VisualAttribution, OCRRequest, OCRResponse, OCRLine
+    TokenAttribution, VisualAttribution, OCRRequest, OCRResponse, OCRLine,
+    FormalInput, ShapleyStreams, WaterfallStep, ExplanationStep
 )
 from backend.core.config import settings
 from backend.database.db import get_connection
@@ -27,6 +30,7 @@ from src.models.llm_reasoner import LLMReasoningEngine
 from src.explainability.text_attribution import TextAttributionEngine
 from src.explainability.visual_attribution import VisualAttributionEngine
 from src.explainability.synthesizer import ExplanationSynthesizer
+from src.explainability.stream_shapley import StreamShapleyExplainer
 
 router = APIRouter(prefix="/api/detection", tags=["Detection"])
 
@@ -50,59 +54,49 @@ def get_active_model_registry_info() -> Dict[str, Any]:
     if row:
         return dict(row)
     return {
-        "id": settings.app_config.get("active_model", {}).get("id", "multilingual-transformer-v1"),
-        "checkpoint_path": "models/checkpoints/multilingual_transformer.pt",
-        "version": "1.0"
+        "id": "multilingual-transformer-v1",
+        "name": "Multilingual Contextual Transformer (BiLSTM + Attention)",
+        "version": "1.0",
+        "checkpoint_path": "models/checkpoints/best_transformer.pt"
     }
 
-def get_models(force_reload: bool = False) -> Tuple[Optional[ClassicalBaselineClassifier], Optional[MultilingualTransformerEngine]]:
+def get_models() -> Tuple[Optional[ClassicalBaselineClassifier], Optional[MultilingualTransformerEngine]]:
+    """Lazy load both classical and active transformer models."""
     global _classical_model, _transformer_model, _current_loaded_checkpoint
-    
-    active_info = get_active_model_registry_info()
-    raw_ckpt = active_info.get("checkpoint_path") or "models/checkpoints/multilingual_transformer.pt"
-    target_ckpt = str(settings.resolve_path(raw_ckpt))
 
-    if _classical_model is None or force_reload:
+    if _classical_model is None:
         _classical_model = ClassicalBaselineClassifier()
-        if settings.resolve_path(_classical_model.checkpoint_path).exists():
+        if _classical_model.checkpoint_path.exists():
             _classical_model.load()
 
-    need_reload = (
-        _transformer_model is None or
-        force_reload or
-        _current_loaded_checkpoint != target_ckpt
-    )
+    active_reg = get_active_model_registry_info()
+    ckpt_rel = active_reg.get("checkpoint_path", "models/checkpoints/best_transformer.pt")
+    ckpt_abs = settings.resolve_path(ckpt_rel)
 
-    if need_reload:
-        _transformer_model = MultilingualTransformerEngine(checkpoint_path=target_ckpt)
-        resolved_p = settings.resolve_path(target_ckpt)
-        if resolved_p.exists():
-            _transformer_model.load_checkpoint(resolved_p)
-            _current_loaded_checkpoint = target_ckpt
-        elif settings.resolve_path(_transformer_model.checkpoint_path).exists():
-            _transformer_model.load_checkpoint()
-            _current_loaded_checkpoint = str(_transformer_model.checkpoint_path)
+    if _transformer_model is None or _current_loaded_checkpoint != str(ckpt_abs):
+        _transformer_model = MultilingualTransformerEngine(checkpoint_path=ckpt_abs)
+        if ckpt_abs.exists():
+            try:
+                _transformer_model.load_checkpoint(ckpt_abs)
+                _current_loaded_checkpoint = str(ckpt_abs)
+            except Exception as e:
+                print(f"Failed to load transformer checkpoint {ckpt_abs}: {e}")
+                _transformer_model.is_trained = False
 
     return _classical_model, _transformer_model
 
 @router.post("/ocr", response_model=OCRResponse)
-def extract_ocr_endpoint(req: OCRRequest):
+def run_ocr(req: OCRRequest):
     """
-    Dedicated OCR endpoint returning detected typography lines with normalized bounding boxes.
-    Enables interactive review and manual editing before detection.
+    Dedicated OCR endpoint that accepts image_path or image_base64 and returns
+    structured lines with normalized and pixel bounding boxes, reading order, and script.
     """
     if not req.image_path and not req.image_base64:
-        raise HTTPException(status_code=400, detail="Must provide image_path or image_base64.")
+        raise HTTPException(status_code=400, detail="Must provide either image_path or image_base64.")
 
-    if req.image_base64 and len(req.image_base64) > 7_000_000:
-        raise HTTPException(status_code=400, detail="Image payload exceeds maximum allowed size of 5 MB.")
+    img_source = req.image_path or req.image_base64
+    res = OCRService.extract_text(img_source)
 
-    img_input = req.image_path or req.image_base64
-    if req.image_base64:
-        img_props = _image_proc.inspect_and_preprocess(req.image_base64)
-        img_input = img_props["pil_image"]
-
-    res = OCRService.extract_text(img_input)
     return OCRResponse(
         status=res.get("status", "ok"),
         extracted_text=res.get("extracted_text", ""),
@@ -124,6 +118,7 @@ def extract_ocr_endpoint(req: OCRRequest):
 
 @router.post("/detect", response_model=DetectionResponse)
 def detect_content(req: DetectionRequest):
+    t_start = time.perf_counter()
     classical_clf, transformer_clf = get_models()
     if not req.text and not req.image_path and not req.image_base64:
         raise HTTPException(status_code=400, detail="Must provide at least text or image content.")
@@ -151,7 +146,7 @@ def detect_content(req: DetectionRequest):
         modalities_used.append("context")
 
     # 3. Modality: Visual, OCR & Image Feature Tensor
-    ocr_result = {"extracted_text": "", "bounding_boxes": [], "confidence": 0.0}
+    ocr_result = {"extracted_text": "", "bounding_boxes": [], "confidence": 0.0, "lines": []}
     img_tensor = None
     saved_image_path = req.image_path
 
@@ -178,9 +173,11 @@ def detect_content(req: DetectionRequest):
             if not req.ocr_lines_override:
                 if req.ocr_text and req.ocr_text.strip():
                     ocr_result = {
+                        "status": "ok",
                         "extracted_text": req.ocr_text.strip(),
-                        "bounding_boxes": [],
-                        "confidence": 0.99
+                        "confidence": 0.99,
+                        "lines": [],
+                        "bounding_boxes": []
                     }
                 else:
                     ocr_result = OCRService.extract_text(req.image_path or img_props["pil_image"])
@@ -202,6 +199,8 @@ def detect_content(req: DetectionRequest):
         except Exception as e:
             print(f"Image processing note: {e}")
 
+    t_ocr_done = time.perf_counter()
+
     # Combine text and OCR text if present
     full_text = clean_text
     if ocr_result["extracted_text"]:
@@ -212,11 +211,17 @@ def detect_content(req: DetectionRequest):
     active_model_id = req.model_id or active_reg.get("id", "multilingual-transformer-v1")
     model_version = active_reg.get("version", "1.0")
     decision_band = "normal"
+    pred_probs = {"Hate Speech": 0.5, "Non-Hate": 0.5}
+    pred_logits = [0.0, 0.0]
 
     if active_model_id == "classical-tfidf-svm" and classical_clf and classical_clf.is_trained:
         pred_res = classical_clf.predict(full_text)
         pred_label = pred_res["label"]
         confidence = pred_res["confidence"]
+        pred_probs = pred_res.get("probabilities", {
+            "Hate Speech": confidence if pred_label == 1 else round(1.0 - confidence, 4),
+            "Non-Hate": round(1.0 - confidence, 4) if pred_label == 1 else confidence
+        })
         predict_fn = classical_clf.predict
     elif active_model_id == "llm-structured-reasoner-v1":
         trans_prob = transformer_clf.predict(full_text) if (transformer_clf and transformer_clf.is_trained) else None
@@ -229,12 +234,21 @@ def detect_content(req: DetectionRequest):
         )
         pred_label = llm_out.predicted_label
         confidence = llm_out.calibrated_confidence
+        pred_probs = {
+            "Hate Speech": confidence if pred_label == 1 else round(1.0 - confidence, 4),
+            "Non-Hate": round(1.0 - confidence, 4) if pred_label == 1 else confidence
+        }
         predict_fn = transformer_clf.predict if (transformer_clf and transformer_clf.is_trained) else classical_clf.predict
     else:
         # Default: Multilingual Attention Transformer with Multimodal Fusion if visual present
         if transformer_clf and transformer_clf.is_trained:
             pred_res = transformer_clf.predict(full_text, context=ctx_info)
             decision_band = pred_res.get("decision_band", "normal")
+            pred_logits = pred_res.get("calibrated_logits") or pred_res.get("logits") or [0.0, 0.0]
+            pred_probs = pred_res.get("probabilities", {
+                "Hate Speech": pred_res["raw_hateful_probability"],
+                "Non-Hate": pred_res["raw_non_hateful_probability"]
+            })
             
             # Incorporate Cross-Modal CNN Feature Fusion when image tensor is available
             if img_tensor is not None:
@@ -248,6 +262,10 @@ def detect_content(req: DetectionRequest):
                     fused_prob = round(0.70 * pred_res["raw_hateful_probability"] + 0.30 * p_mm_hate, 4)
                     pred_label = 1 if fused_prob >= 0.50 else 0
                     confidence = fused_prob if pred_label == 1 else round(1.0 - fused_prob, 4)
+                    pred_probs = {
+                        "Hate Speech": fused_prob,
+                        "Non-Hate": round(1.0 - fused_prob, 4)
+                    }
                     modalities_used.append("visual_cnn_fusion")
                 except Exception as e:
                     print(f"Multimodal cross-attention fallback: {e}")
@@ -261,14 +279,56 @@ def detect_content(req: DetectionRequest):
             pred_res = classical_clf.predict(full_text)
             pred_label = pred_res["label"]
             confidence = pred_res["confidence"]
+            pred_probs = pred_res["probabilities"]
             decision_band = "normal"
             predict_fn = classical_clf.predict
         else:
             raise HTTPException(status_code=500, detail="No trained model available. Train models in Model Lab.")
 
-    # 5. Explainability Computation
+    t_inf_done = time.perf_counter()
+
+    # 5. Three-Stream Shapley Attribution & Explainability Computation
     explanation_obj = None
     if req.explain:
+        # Define evaluation function for 3-stream Shapley subsets S ⊆ {T, V, C}
+        def eval_subset_stream(t_sub: str, v_ocr_sub: str, c_sub: Optional[Dict[str, Any]]) -> float:
+            sub_text = t_sub
+            if v_ocr_sub:
+                sub_text = f"{t_sub} [OCR: {v_ocr_sub}]".strip() if t_sub else v_ocr_sub.strip()
+            
+            if transformer_clf and transformer_clf.is_trained:
+                res = transformer_clf.predict(sub_text, context=c_sub)
+                cal_logits = res.get("calibrated_logits", [0.0, 0.0])
+                z_score = float(cal_logits[1] - cal_logits[0])
+                if v_ocr_sub and img_tensor is not None:
+                    try:
+                        t_f = transformer_clf.encode_text(sub_text)
+                        with torch.no_grad():
+                            mm_l = _multimodal_detector(t_f, img_tensor)
+                            mm_p = F.softmax(mm_l, dim=-1).cpu().numpy()[0]
+                        p_mm = float(mm_p[1])
+                        p_clamped = max(0.01, min(0.99, p_mm))
+                        z_vis = math.log(p_clamped / (1.0 - p_clamped))
+                        z_score = 0.70 * z_score + 0.30 * z_vis
+                    except Exception:
+                        pass
+                return z_score
+            elif classical_clf and classical_clf.is_trained:
+                res = classical_clf.predict(sub_text)
+                p = res["probabilities"]["Hate Speech"]
+                p_clamped = max(0.01, min(0.99, p))
+                return math.log(p_clamped / (1.0 - p_clamped))
+            return 0.0
+
+        # Exact Shapley decomposition over x_i = {T_i, V_i, C_i}
+        shapley_data = StreamShapleyExplainer.compute_shapley_streams(
+            text=clean_text,
+            eval_fn=eval_subset_stream,
+            ocr_text=ocr_result["extracted_text"],
+            context_data=ctx_info if ctx_info["has_context"] else None,
+            ocr_lines=ocr_result.get("lines", [])
+        )
+
         attr_data = _xai_engine.compute_perturbation_attribution(clean_text, predict_fn)
         token_attrs = [
             TokenAttribution(token=a["token"], score=a["score"], polarity=a["polarity"])
@@ -287,7 +347,9 @@ def detect_content(req: DetectionRequest):
             ocr_text=ocr_result["extracted_text"],
             context_data=ctx_info,
             decision_band=decision_band,
-            aopc_details=attr_data.get("aopc_details")
+            aopc_details=attr_data.get("aopc_details"),
+            shapley_data=shapley_data,
+            calibrated_logits=pred_logits
         )
 
         explanation_obj = ExplanationResponse(
@@ -297,8 +359,21 @@ def detect_content(req: DetectionRequest):
             contextual_evidence=ctx_info if ctx_info["has_context"] else None,
             natural_language_explanation=synth["natural_language_explanation"],
             faithfulness_score=synth["faithfulness_score"],
-            uncertainty_notes="High contextual sensitivity / low decision margin." if confidence < 0.70 else "Grounded in observed token attributions."
+            uncertainty_notes="High contextual sensitivity / low decision margin." if confidence < 0.70 else "Grounded in observed token attributions.",
+            formal_input=FormalInput(**shapley_data["formal_input"]),
+            shapley_streams=ShapleyStreams(**shapley_data["shapley_streams"]),
+            stream_agreement=shapley_data["stream_agreement"],
+            steps=[ExplanationStep(**s) for s in synth["steps"]],
+            waterfall=[WaterfallStep(**w) for w in shapley_data["waterfall"]]
         )
+
+    t_expl_done = time.perf_counter()
+    timing_ms = {
+        "ocr_ms": round((t_ocr_done - t_start) * 1000.0, 2),
+        "inference_ms": round((t_inf_done - t_ocr_done) * 1000.0, 2),
+        "attribution_ms": round((t_expl_done - t_inf_done) * 1000.0, 2),
+        "total_ms": round((t_expl_done - t_start) * 1000.0, 2)
+    }
 
     # 6. Persistent DB Record
     conn = get_connection()
@@ -328,10 +403,20 @@ def detect_content(req: DetectionRequest):
         predicted_label=pred_label,
         label_name="HATEFUL" if pred_label == 1 else "NON-HATEFUL",
         confidence=confidence,
+        verdict="HATEFUL" if pred_label == 1 else "NON-HATEFUL",
+        decision_band=decision_band,
+        probabilities=pred_probs,
+        logits=pred_logits,
         model_id=active_model_id,
         model_version=model_version,
         language_detected=lang,
         modalities_used=modalities_used,
         explanation=explanation_obj,
+        timing_ms=timing_ms,
         created_at=now
     )
+
+@router.post("/detect-v2", response_model=DetectionResponse)
+def detect_content_v2(req: DetectionRequest):
+    """v2 endpoint alias with complete three-stream Shapley breakdown and waterfall."""
+    return detect_content(req)
