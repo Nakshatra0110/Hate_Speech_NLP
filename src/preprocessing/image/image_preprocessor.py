@@ -46,7 +46,7 @@ class ImagePreprocessor:
             raise ValueError(f"Unsupported image input type: {type(image_input)}")
 
         orig_width, orig_height = img.size
-        # Resize to target
+        # Resize to target for CNN visual embeddings
         resized = img.resize(self.target_size, Image.Resampling.BILINEAR)
         img_np = np.array(resized).astype(np.float32) / 255.0
 
@@ -61,6 +61,7 @@ class ImagePreprocessor:
             "mean_brightness": round(mean_brightness, 4),
             "contrast": round(contrast, 4),
             "processed_array": img_np,
-            "pil_image": resized
+            "pil_image": img,  # Keep full original resolution for OCR and file storage
+            "cnn_image": resized
         }
 

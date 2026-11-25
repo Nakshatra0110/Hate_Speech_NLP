@@ -456,7 +456,11 @@ class MultilingualTransformerEngine:
             "अस्वीकार्य", "निंदनीय", "निंदा", "कड़ी निंदा", "अशोभनीय", "गैर-कानूनी",
             "nafrat bhari", "aisi nafrat", "nafrat mat", "sharmnak", "band honi chahiye",
             "galat baat", "kadi ninda", "galat hai", "bilkul galat", "shanti banaye",
-            "नफरत भरी", "नफ़रत भरी", "नफरत मत", "शांति बनाए", "गलत है", "शर्मनाक"
+            "नफरत भरी", "नफ़रत भरी", "नफरत मत", "शांति बनाए", "गलत है", "शर्मनाक",
+            # Meme counterspeech, anti-hate & solidarity slogans
+            "choose respect", "kindness is contagious", "no room for racism", "equality for all",
+            "say no to hate", "reject hate", "love over hate", "peace not hate", "read books not hate",
+            "knowledge empowers", "diversity and equality", "teamwork and passion", "choose kindness"
         ]
         is_condemning_quote = False
         if not is_endorsement:

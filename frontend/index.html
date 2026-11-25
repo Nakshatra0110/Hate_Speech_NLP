@@ -136,23 +136,6 @@
                 <button type="button" class="example-link" data-example="meme_vermin">Hostile meme</button>
               </div>
             </div>
-
-            <!-- Conversation Context Accordion (Optional) -->
-            <div id="contextAccordion" class="context-accordion">
-              <button type="button" id="contextTrigger" class="context-trigger" aria-expanded="false" aria-controls="contextCollapse">
-                <span>Conversation context (optional)</span>
-                <span id="contextIcon" class="context-icon" aria-hidden="true">+</span>
-              </button>
-              <div id="contextCollapse" class="context-collapse" role="region">
-                <div class="context-inner">
-                  <p class="context-helper">
-                    Supplying prior dialogue turns allows the model to evaluate whether hostile terms are cited, countered, or directly addressed.
-                  </p>
-                  <label for="contextInput" class="visually-hidden" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">Context thread</label>
-                  <input id="contextInput" type="text" placeholder="e.g. Thread discussing countering extremism on social media.">
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Panel 2: Meme & OCR Mode -->
@@ -396,76 +379,173 @@
   </section>
 
   <!-- ==============================================================================
-       4. "How it works" Section (Cloudflare Feature-Grid Pattern)
+       4. Methodology & Architecture Horizontal Carousel
        ============================================================================== -->
-  <section id="how-it-works" class="section" aria-labelledby="how-it-works-heading">
-    <div class="container feature-grid-layout">
+  <section id="how-it-works" class="section section-methodology" aria-labelledby="how-it-works-heading">
+    <div class="container">
       
-      <!-- Narrow Left Column -->
-      <div class="feature-sidebar">
-        <span class="type-label">Methodology</span>
-        <h2 id="how-it-works-heading" class="type-section">How it works</h2>
-        <p class="type-body-large">
-          Rigorous content moderation requires grounded explanations, cross-modal attention, and multi-stream attribution.
-        </p>
-        <div style="margin-top: 1rem;">
-          <a href="/docs" target="_blank" rel="noopener noreferrer" class="text-link">Read research paper specifications →</a>
+      <!-- Section Header with Title and Scroll Navigation Controls -->
+      <div class="methodology-header-row">
+        <div class="methodology-header-text">
+          <span class="type-label">Methodology &amp; Architecture</span>
+          <h2 id="how-it-works-heading" class="type-section" style="margin: 0.25rem 0 0.5rem;">Pipeline Architecture &amp; Methodology</h2>
+          <p class="section-lead-desc">
+            A modular six-stage inference and explainability pipeline engineered for code-mixed multimodal hate speech detection. Scroll or swipe horizontally to explore each pipeline stage.
+          </p>
+        </div>
+        <div class="methodology-controls" aria-label="Methodology timeline controls">
+          <span class="methodology-controls-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline><polyline points="9 18 15 12 9 6"></polyline></svg>
+            Swipe / Scroll
+          </span>
+          <div class="methodology-btn-group">
+            <button type="button" id="timelinePrevBtn" class="methodology-nav-btn" aria-label="Previous pipeline stage" title="Previous stage" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button type="button" id="timelineNextBtn" class="methodology-nav-btn" aria-label="Next pipeline stage" title="Next stage">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Wider Right 2-Column Grid -->
-      <div class="feature-grid">
-        
-        <div class="feature-item">
-          <h3 class="feature-title">Code-mixed language handling</h3>
-          <p class="feature-desc">
-            Social conversations across South Asia interleave Hindi (Devanagari) and Latin phonetic transliteration (Hinglish). Our model deploys subword byte-pair embeddings resilient to non-standard phonetic spelling and colloquial slang.
-          </p>
-          <a href="#detector" class="text-link">Explore in detector</a>
+      <!-- Horizontal Scrollable Track -->
+      <div class="methodology-carousel-wrapper">
+        <div id="timelineScrollContainer" class="horizontal-scroll-track" tabindex="0" role="region" aria-label="Methodology Pipeline Stages">
+          
+          <!-- Stage 1 -->
+          <article class="methodology-card" id="stage-card-1">
+            <div class="card-top">
+              <div class="card-meta-line">
+                <span class="stage-tag">Stage 01</span>
+                <span class="stage-badge">x_i = {T_i, V_i, C_i}</span>
+              </div>
+              <h3 class="stage-title">Code-Mixed Language Handling</h3>
+              <p class="stage-desc">
+                Social conversations across South Asia interleave Hindi (Devanagari) and Latin phonetic transliteration (Hinglish). Subword byte-pair embeddings remain resilient to non-standard phonetic spelling, dialect variations, and obfuscated slang.
+              </p>
+            </div>
+            <div class="card-bottom">
+              <div class="stage-spec">
+                <span class="spec-label">Architecture</span>
+                <span class="spec-value">Multilingual Subword BPE</span>
+              </div>
+              <a href="#detector" class="stage-link">Explore in detector <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <!-- Stage 2 -->
+          <article class="methodology-card" id="stage-card-2">
+            <div class="card-top">
+              <div class="card-meta-line">
+                <span class="stage-tag">Stage 02</span>
+                <span class="stage-badge">Contextual Mitigation</span>
+              </div>
+              <h3 class="stage-title">Negation &amp; Counterspeech Dynamics</h3>
+              <p class="stage-desc">
+                Standard classifiers erroneously flag innocent quotations or civil counterspeech that quotes hostile slurs to denounce them. Bidirectional self-attention layers assign mitigating saliency to condemnatory verbs like "unacceptable" or "completely false."
+              </p>
+            </div>
+            <div class="card-bottom">
+              <div class="stage-spec">
+                <span class="spec-label">Mechanism</span>
+                <span class="spec-value">Attentive Quotation Disambiguation</span>
+              </div>
+              <a href="#detector" class="stage-link">Test counterspeech example <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <!-- Stage 3 -->
+          <article class="methodology-card" id="stage-card-3">
+            <div class="card-top">
+              <div class="card-meta-line">
+                <span class="stage-tag">Stage 03</span>
+                <span class="stage-badge">OCR + ResNet Fusion</span>
+              </div>
+              <h3 class="stage-title">OCR &amp; Multimodal Feature Fusion</h3>
+              <p class="stage-desc">
+                Memes combine benign background visuals with toxic overlaid typography. Multi-pass contrast-enhanced EasyOCR extracts bounding boxes while intermediate CNN feature layers project visual embeddings into cross-attention transformer heads.
+              </p>
+            </div>
+            <div class="card-bottom">
+              <div class="stage-spec">
+                <span class="spec-label">Vision-Language</span>
+                <span class="spec-value">Dual-Stream Cross-Attention</span>
+              </div>
+              <a href="#detector" class="stage-link">Inspect meme cross-attention <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <!-- Stage 4 -->
+          <article class="methodology-card" id="stage-card-4">
+            <div class="card-top">
+              <div class="card-meta-line">
+                <span class="stage-tag">Stage 04</span>
+                <span class="stage-badge">T = 1.35 · ECE 0.042</span>
+              </div>
+              <h3 class="stage-title">Platt Temperature Calibration</h3>
+              <p class="stage-desc">
+                Rather than relying on ungrounded raw softmax scores, model logits are post-calibrated with Platt temperature scaling (T = 1.35) against holdout validation splits, reducing calibration error to produce honest 95% confidence intervals.
+              </p>
+            </div>
+            <div class="card-bottom">
+              <div class="stage-spec">
+                <span class="spec-label">Calibration</span>
+                <span class="spec-value">Logit Scaling &amp; Error Bounds</span>
+              </div>
+              <a href="#detector" class="stage-link">View token heatmaps <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <!-- Stage 5 -->
+          <article class="methodology-card" id="stage-card-5">
+            <div class="card-top">
+              <div class="card-meta-line">
+                <span class="stage-tag">Stage 05</span>
+                <span class="stage-badge">Efficiency ∑φ_i = Δz</span>
+              </div>
+              <h3 class="stage-title">Exact 3-Stream Shapley XAI</h3>
+              <p class="stage-desc">
+                Exact cooperative game-theoretic Shapley values decompose decisions into linguistic text, visual typography, and conversational thread context, guaranteeing mathematical efficiency without arbitrary heuristics.
+              </p>
+            </div>
+            <div class="card-bottom">
+              <div class="stage-spec">
+                <span class="spec-label">Attribution</span>
+                <span class="spec-value">Axiomatic Game Theory</span>
+              </div>
+              <a href="#detector" class="stage-link">Explore stream decomposition <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <!-- Stage 6 -->
+          <article class="methodology-card" id="stage-card-6">
+            <div class="card-top">
+              <div class="card-meta-line">
+                <span class="stage-tag">Stage 06</span>
+                <span class="stage-badge">Equalized Odds Parity</span>
+              </div>
+              <h3 class="stage-title">Fairness Audit &amp; DPO Feedback</h3>
+              <p class="stage-desc">
+                We continuously evaluate disparate error rates across dialect groups to ensure false-positive parity. The architecture maintains equalized odds across standard English, Devanagari Hindi, and code-mixed Hinglish subsets with human-in-the-loop DPO.
+              </p>
+            </div>
+            <div class="card-bottom">
+              <div class="stage-spec">
+                <span class="spec-label">Audit Metric</span>
+                <span class="spec-value">FPR Parity &amp; Preference Opt</span>
+              </div>
+              <a href="#evaluation" class="stage-link">Review evaluation metrics <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
         </div>
 
-        <div class="feature-item">
-          <h3 class="feature-title">Negation and counterspeech</h3>
-          <p class="feature-desc">
-            Classifiers often flag innocent quotations or anti-hate advocacy that repeat slurs to condemn them. Bidirectional attention layers assign strong mitigating saliency to condemnatory verbs like "unacceptable" or "completely false."
-          </p>
-          <a href="#detector" class="text-link">Test counterspeech example</a>
+        <!-- Sleek Custom Progress Indicator Track -->
+        <div class="methodology-progress-track" aria-hidden="true">
+          <div id="timelineProgressBar" class="methodology-progress-thumb"></div>
         </div>
-
-        <div class="feature-item">
-          <h3 class="feature-title">OCR + multimodal fusion</h3>
-          <p class="feature-desc">
-            Memes juxtapose harmless background imagery with toxic typography. Spatial OCR extracts typographic coordinates while intermediate CNN feature representations project visual embeddings into cross-attention transformer heads.
-          </p>
-          <a href="#detector" class="text-link">Inspect meme cross-attention</a>
-        </div>
-
-        <div class="feature-item">
-          <h3 class="feature-title">Token attribution</h3>
-          <p class="feature-desc">
-            Rather than relying on ungrounded post-hoc approximations, we compute perturbation saliency by observing probability drops under token masking, verified against Area Over the Perturbation Curve (AOPC) standards.
-          </p>
-          <a href="#detector" class="text-link">View token heatmaps</a>
-        </div>
-
-        <div class="feature-item">
-          <h3 class="feature-title">Multi-stream Shapley analysis</h3>
-          <p class="feature-desc">
-            Exact 3-stream Shapley values decompose decisions into linguistic content, visual typography, and conversational thread context, guaranteeing mathematical efficiency without arbitrary heuristics.
-          </p>
-          <a href="#detector" class="text-link">Explore stream decomposition</a>
-        </div>
-
-        <div class="feature-item">
-          <h3 class="feature-title">Fairness audit</h3>
-          <p class="feature-desc">
-            We evaluate disparate error rates across dialect groups to ensure false-positive parity. The architecture maintains equalized odds across standard English, Devanagari Hindi, and code-mixed Hinglish subsets.
-          </p>
-          <a href="#evaluation" class="text-link">Review evaluation metrics</a>
-        </div>
-
       </div>
-
     </div>
   </section>
 
@@ -687,6 +767,8 @@
   <div id="toastNotification" class="toast toast-container" role="status" aria-live="polite"></div>
 
   <!-- Scripts -->
-  <script src="/static/js/detector.js?v=5.2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="/static/js/detector.js?v=5.3"></script>
 </body>
 </html>

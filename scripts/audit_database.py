@@ -1,6 +1,10 @@
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect('data/hate_speech_detector.db')
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+db_path = PROJECT_ROOT / "data" / "hate_speech_detector.db"
+
+conn = sqlite3.connect(str(db_path))
 cursor = conn.cursor()
 tables = cursor.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
 print("Tables in SQLite database:")

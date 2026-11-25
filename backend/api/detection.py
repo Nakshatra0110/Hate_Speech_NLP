@@ -204,7 +204,8 @@ def detect_content(req: DetectionRequest):
     t_ocr_done = time.perf_counter()
 
     # Combine text and OCR text if present
-    if not clean_text and ocr_result["extracted_text"]:
+    is_placeholder = clean_text.lower().strip() in {"meme image analysis", "meme analysis", "image analysis"}
+    if (not clean_text or is_placeholder) and ocr_result["extracted_text"]:
         clean_text = _normalizer.normalize(ocr_result["extracted_text"])
         lang_info = MultilingualLanguageDetector.detect(clean_text)
         lang = lang_info["language"]
@@ -212,7 +213,7 @@ def detect_content(req: DetectionRequest):
             modalities_used.append("text")
 
     full_text = clean_text
-    if ocr_result["extracted_text"] and clean_text != ocr_result["extracted_text"]:
+    if ocr_result["extracted_text"] and clean_text != ocr_result["extracted_text"] and not is_placeholder:
         full_text = f"{clean_text} [OCR: {ocr_result['extracted_text']}]".strip()
 
     # 4. Model Selection & Inference

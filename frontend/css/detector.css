@@ -206,68 +206,6 @@
 }
 
 /* ------------------------------------------------------------------------------
-   Conversation Context Accordion
-   ------------------------------------------------------------------------------ */
-.context-accordion {
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius);
-  margin-bottom: 1.25rem;
-  background-color: var(--canvas);
-  overflow: hidden;
-}
-
-.context-trigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-family);
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--ink);
-  text-align: left;
-  transition: background-color var(--transition-fast);
-}
-
-.context-trigger:hover {
-  background-color: var(--canvas-subtle);
-}
-
-.context-icon {
-  color: var(--action);
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.context-collapse {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--transition-normal);
-  overflow: hidden;
-}
-
-.context-accordion.open .context-collapse {
-  grid-template-rows: 1fr;
-}
-
-.context-inner {
-  min-height: 0;
-  padding: 0.25rem 1rem 1rem 1rem;
-}
-
-.context-helper {
-  font-size: 0.75rem;
-  color: var(--muted-ink);
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
-}
-
-/* ------------------------------------------------------------------------------
    Run Button & Loading Stages
    ------------------------------------------------------------------------------ */
 .run-btn-wrapper {
@@ -1215,6 +1153,7 @@
 
 /* 5-Step Stepper Dropdown Component */
 .stepper-dropdown-card {
+  margin-top: 1.75rem;
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
   background-color: var(--canvas);
@@ -1567,5 +1506,264 @@
 
   .examples-links {
     gap: 0.5rem 1rem;
+  }
+}
+
+/* ==============================================================================
+   4. Horizontal Scrolling Methodology Section (Clean Native Carousel)
+   ============================================================================== */
+.section-methodology {
+  padding: 4.5rem 0 5rem;
+  background-color: var(--canvas);
+  color: var(--ink);
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.methodology-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.methodology-header-text {
+  flex: 1 1 520px;
+}
+
+.methodology-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.methodology-controls-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-ink);
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.methodology-btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.methodology-nav-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  background: var(--surface);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.methodology-nav-btn:hover:not(:disabled) {
+  border-color: #ff5f00;
+  color: #ff5f00;
+  background: rgba(255, 95, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.methodology-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.methodology-carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.horizontal-scroll-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.75rem 0.25rem 1.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 95, 0, 0.35) transparent;
+  cursor: grab;
+}
+
+.horizontal-scroll-track.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+  scroll-behavior: auto;
+}
+
+.methodology-card {
+  flex: 0 0 360px;
+  width: 360px;
+  max-width: 85vw;
+  scroll-snap-align: start;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg, 14px);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+}
+
+.methodology-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 95, 0, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-meta-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stage-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ff5f00;
+}
+
+.stage-badge {
+  font-size: 0.72rem;
+  font-family: var(--font-mono, monospace);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: rgba(255, 95, 0, 0.1);
+  color: #ff5f00;
+  border: 1px solid rgba(255, 95, 0, 0.25);
+  white-space: nowrap;
+}
+
+.stage-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0;
+}
+
+.stage-desc {
+  font-size: 0.85rem;
+  color: var(--muted-ink);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.stage-spec {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.spec-label {
+  color: var(--muted-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+}
+
+.spec-value {
+  color: var(--ink);
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+}
+
+.stage-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ff5f00;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: gap 0.2s ease;
+}
+
+.stage-link:hover {
+  gap: 0.55rem;
+  text-decoration: underline;
+}
+
+.methodology-progress-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  margin-top: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.methodology-progress-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 25%;
+  background: #ff5f00;
+  border-radius: 3px;
+  transition: transform 0.1s linear;
+  box-shadow: 0 0 10px rgba(255, 95, 0, 0.7);
+}
+
+@media (max-width: 768px) {
+  .section-methodology {
+    padding: 3rem 0;
+  }
+  .methodology-header-row {
+    margin-bottom: 1.25rem;
+  }
+  .methodology-card {
+    flex: 0 0 300px;
+    width: 300px;
+    padding: 1.35rem;
+  }
+  .stage-title {
+    font-size: 1.1rem;
   }
 }

@@ -127,12 +127,12 @@
     initTabs();
     initTextInput();
     initExamples();
-    initContextAccordion();
     initMemeDropzone();
     initOcrStudioControls();
     initDetectorForm();
     initEvidenceTabs();
     initFAQAccordions();
+    initMethodologyTimeline();
     fetchSystemHealth();
     fetchEvaluationMetrics();
   });
@@ -148,10 +148,6 @@
       charCount: document.getElementById('charCount'),
       scriptHint: document.getElementById('scriptHint'),
       textError: document.getElementById('textValidationError'),
-      contextAccordion: document.getElementById('contextAccordion'),
-      contextTrigger: document.getElementById('contextTrigger'),
-      contextInput: document.getElementById('contextInput'),
-      contextIcon: document.getElementById('contextIcon'),
       runBtn: document.getElementById('runDetectionBtn'),
       runBtnText: document.getElementById('runBtnText'),
       // Meme elements
@@ -374,7 +370,6 @@
 
     if (data.type === 'text') {
       switchTab('text');
-      if (el.contextInput && data.context) el.contextInput.value = data.context;
       typewriterFill(el.textarea, data.text, () => {
         validateInput();
         if (el.textarea) el.textarea.focus();
@@ -422,19 +417,7 @@
     }, stepDuration);
   }
 
-  /* ----------------------------------------------------------------------------
-     Context Accordion (Collapsed by default, orange +/-)
-     ---------------------------------------------------------------------------- */
-  function initContextAccordion() {
-    if (!el.contextTrigger || !el.contextAccordion) return;
 
-    el.contextTrigger.addEventListener('click', () => {
-      const isOpen = el.contextAccordion.classList.contains('open');
-      el.contextAccordion.classList.toggle('open');
-      el.contextTrigger.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
-      if (el.contextIcon) el.contextIcon.textContent = !isOpen ? '−' : '+';
-    });
-  }
 
   /* ----------------------------------------------------------------------------
      Meme Tab: Dropzone, OCR Studio, File Picker & Presets
@@ -565,47 +548,50 @@
       el.memeEmptyOcrNote.textContent = 'Extracting typography with multi-variant EasyOCR…';
     }
 
-    try {
-      const payload = {};
-      if (state.currentMeme.base64) {
-        payload.image_base64 = state.currentMeme.base64;
-      } else if (state.currentMeme.path) {
-        payload.image_path = state.currentMeme.path.replace(/^\//, '');
-      }
-
-      const resp = await fetch('/api/detection/ocr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-
-      state.ocrLines = data.lines || [];
-      renderOcrLinesAndBboxes();
-
-      if (el.memeEmptyOcrNote) {
-        if (state.ocrLines.length === 0) {
-          el.memeEmptyOcrNote.style.display = 'block';
-          el.memeEmptyOcrNote.textContent = 'No embedded typography detected in this image.';
-        } else {
-          el.memeEmptyOcrNote.style.display = 'none';
+    state.ocrPromise = (async () => {
+      try {
+        const payload = {};
+        if (state.currentMeme.base64) {
+          payload.image_base64 = state.currentMeme.base64;
+        } else if (state.currentMeme.path) {
+          payload.image_path = state.currentMeme.path.replace(/^\//, '');
         }
-      }
-    } catch (err) {
-      console.warn('OCR error fallback:', err);
-      if (state.currentMeme.ocr) {
-        state.ocrLines = [{
-          text: state.currentMeme.ocr,
-          confidence: 0.95,
-          script: 'Latin',
-          box_norm: [0.15, 0.1, 0.45, 0.9]
-        }];
+
+        const resp = await fetch('/api/detection/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        state.ocrLines = data.lines || [];
         renderOcrLinesAndBboxes();
+
+        if (el.memeEmptyOcrNote) {
+          if (state.ocrLines.length === 0) {
+            el.memeEmptyOcrNote.style.display = 'block';
+            el.memeEmptyOcrNote.textContent = 'No embedded typography detected in this image.';
+          } else {
+            el.memeEmptyOcrNote.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.warn('OCR error fallback:', err);
+        if (state.currentMeme.ocr) {
+          state.ocrLines = [{
+            text: state.currentMeme.ocr,
+            confidence: 0.95,
+            script: 'Latin',
+            box_norm: [0.15, 0.1, 0.45, 0.9]
+          }];
+          renderOcrLinesAndBboxes();
+        }
+        if (el.memeEmptyOcrNote) el.memeEmptyOcrNote.style.display = 'none';
       }
-      if (el.memeEmptyOcrNote) el.memeEmptyOcrNote.style.display = 'none';
-    }
+    })();
+    return state.ocrPromise;
   }
 
   function renderOcrLinesAndBboxes() {
@@ -809,6 +795,12 @@
       el.memeImageStage.classList.add('scanning');
     }
 
+    // If an OCR extraction is in flight, await it before assembling payload
+    if (state.mode === 'meme' && state.ocrPromise) {
+      updateRunStage('Extracting image typography…');
+      await state.ocrPromise.catch(() => {});
+    }
+
     const payload = {
       model_id: 'multilingual-transformer-v1',
       explain: true
@@ -816,10 +808,6 @@
 
     if (state.mode === 'text') {
       payload.text = el.textarea.value.trim();
-      const ctx = el.contextInput ? el.contextInput.value.trim() : '';
-      if (ctx) {
-        payload.context = { thread_history: [ctx], platform: 'social_web' };
-      }
     } else {
       const ocrCombined = (state.ocrLines && state.ocrLines.length > 0)
         ? state.ocrLines.map(l => l.text).join(' ')
@@ -841,20 +829,16 @@
       }
     }
 
-    const stages = [
-      'Normalizing text',
-      'Detecting language',
-      'Running model',
-      'Computing Shapley streams',
-      'Evaluating faithfulness'
-    ];
-    let currentStageIndex = 0;
-    updateRunStage(stages[0]);
+    // Calm, steady loading state with spinner (no frantic text switching)
+    const initialText = state.mode === 'meme' ? 'Analyzing meme…' : 'Analyzing content…';
+    updateRunStage(initialText);
 
-    const stageInterval = setInterval(() => {
-      currentStageIndex = (currentStageIndex + 1) % stages.length;
-      updateRunStage(stages[currentStageIndex]);
-    }, 250);
+    // If inference takes longer than 2.0s, transition once smoothly
+    const slowStageTimer = setTimeout(() => {
+      if (state.isAnalyzing) {
+        updateRunStage('Computing Shapley attributions…');
+      }
+    }, 2000);
 
     const startTime = performance.now();
 
@@ -882,13 +866,14 @@
       const result = await response.json();
       const elapsed = Math.round(performance.now() - startTime);
 
-      clearInterval(stageInterval);
+      clearTimeout(slowStageTimer);
       renderResults(result, elapsed);
     } catch (err) {
       console.error('Detection error:', err);
-      clearInterval(stageInterval);
+      clearTimeout(slowStageTimer);
       showDetectionError(err.message || 'Unable to connect to hate speech detection service.');
     } finally {
+      clearTimeout(slowStageTimer);
       state.isAnalyzing = false;
       if (el.runBtn) {
         el.runBtn.disabled = false;
@@ -902,7 +887,7 @@
 
   function updateRunStage(stageText) {
     if (el.runBtn) {
-      el.runBtn.innerHTML = `<span class="loading-spinner" aria-hidden="true"></span><span>${stageText}…</span>`;
+      el.runBtn.innerHTML = `<span class="loading-spinner" aria-hidden="true"></span><span id="runBtnText">${stageText}</span>`;
     }
   }
 
@@ -986,6 +971,20 @@
     // 6. Meme Bounding Boxes (if meme mode)
     if (state.mode === 'meme') {
       renderMemeBboxes(data);
+      // Sync extracted typography cards if left panel list was not populated
+      if (!state.ocrLines || state.ocrLines.length === 0) {
+        const visualAttrs = (data.explanation && data.explanation.visual_attributions) || [];
+        if (visualAttrs.length > 0) {
+          state.ocrLines = visualAttrs.map(v => ({
+            text: v.text || '',
+            confidence: v.confidence || 0.90,
+            script: v.script || 'Latin',
+            box_norm: v.box_norm || [0, 0, 1, 1],
+            box_px: v.box || null
+          }));
+          renderOcrLinesAndBboxes();
+        }
+      }
     }
   }
 
@@ -1269,6 +1268,110 @@
         if (icon) icon.textContent = !isOpen ? '−' : '+';
       });
     });
+  }
+
+  /* ----------------------------------------------------------------------------
+     Horizontal Scrolling Methodology Carousel (Clean Native Navigation)
+     ---------------------------------------------------------------------------- */
+  function initMethodologyTimeline() {
+    const container = document.getElementById('timelineScrollContainer');
+    const prevBtn = document.getElementById('timelinePrevBtn');
+    const nextBtn = document.getElementById('timelineNextBtn');
+    const progressBar = document.getElementById('timelineProgressBar');
+    if (!container) return;
+
+    function updateTimelineState() {
+      const scrollLeft = container.scrollLeft;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      if (prevBtn) {
+        prevBtn.disabled = scrollLeft <= 4;
+      }
+      if (nextBtn) {
+        nextBtn.disabled = scrollLeft >= maxScroll - 4;
+      }
+
+      if (progressBar && maxScroll > 0) {
+        const ratio = Math.min(1, Math.max(0, scrollLeft / maxScroll));
+        const track = progressBar.parentElement;
+        const trackWidth = track ? track.clientWidth : container.clientWidth;
+        const thumbWidth = progressBar.offsetWidth || (trackWidth * 0.25);
+        const maxTranslate = Math.max(0, trackWidth - thumbWidth);
+        progressBar.style.transform = `translateX(${ratio * maxTranslate}px)`;
+      }
+    }
+
+    function getScrollStep() {
+      const firstCard = container.querySelector('.methodology-card');
+      if (firstCard) {
+        const style = window.getComputedStyle(container);
+        const gap = parseFloat(style.gap) || 24;
+        return firstCard.offsetWidth + gap;
+      }
+      return container.clientWidth * 0.75;
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        container.scrollBy({ left: -getScrollStep(), behavior: 'smooth' });
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        container.scrollBy({ left: getScrollStep(), behavior: 'smooth' });
+      });
+    }
+
+    container.addEventListener('scroll', updateTimelineState, { passive: true });
+    window.addEventListener('resize', updateTimelineState);
+
+    // Desktop Mouse Drag-to-Scroll UX
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.target.closest('a, button')) return;
+      isDown = true;
+      container.classList.add('is-dragging');
+      startX = e.pageX - container.offsetLeft;
+      scrollStart = container.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      container.classList.remove('is-dragging');
+    });
+
+    container.addEventListener('mouseleave', () => {
+      if (!isDown) return;
+      isDown = false;
+      container.classList.remove('is-dragging');
+    });
+
+    container.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.25;
+      container.scrollLeft = scrollStart - walk;
+    });
+
+    // Support keyboard arrow navigation when focused
+    container.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        container.scrollBy({ left: -getScrollStep(), behavior: 'smooth' });
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        container.scrollBy({ left: getScrollStep(), behavior: 'smooth' });
+      }
+    });
+
+    // Initialize state
+    setTimeout(updateTimelineState, 80);
   }
 
   /* ----------------------------------------------------------------------------

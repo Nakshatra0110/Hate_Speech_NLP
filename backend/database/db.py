@@ -1,7 +1,15 @@
 import sqlite3
 import json
+import sys
+from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+# Ensure project root is in sys.path so the script runs from any working directory
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from backend.core.config import settings
 
 def get_connection() -> sqlite3.Connection:
