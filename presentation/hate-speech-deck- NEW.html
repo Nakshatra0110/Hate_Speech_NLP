@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hate Speech Detection through Explainable AI and Reward‑Optimized LLMs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{--canvas:#000;--surface:#1f1f1f;--ink:#fff;--line:#2e2e2e;--mut:#b5b5b5;color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box;margin:0;padding:0}
+body{height:100%;background:var(--canvas);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:1.0625rem;line-height:1.55;letter-spacing:-.01em;overflow:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.017em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* chrome */
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:calc(1.25rem + env(safe-area-inset-top,0px)) 2rem 0;font-size:.875rem;font-weight:500}
+.brand{display:flex;align-items:center;gap:.7rem}
+.brand i{width:14px;height:14px;border:1.5px solid #fff;border-radius:50%;position:relative}
+.brand i::after{content:"";position:absolute;inset:3px;background:#fff;border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.4)}}
+.bottom{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:1.5rem;padding:0 2rem calc(1.5rem + env(safe-area-inset-bottom,0px))}
+.prog{flex:1;height:1px;background:var(--line);position:relative}
+.prog b{position:absolute;left:0;top:0;height:1px;background:#fff;width:0;transition:width .7s cubic-bezier(.2,.7,.2,1)}
+.pill{height:2.5rem;padding:0 1.25rem;border-radius:999px;border:1px solid #fff;background:transparent;font-size:.875rem;font-weight:500;display:inline-flex;align-items:center;gap:.26rem;transition:background .2s,color .2s}
+.pill.primary{background:#fff;color:#000}
+.pill:hover{background:var(--surface)}
+.pill.primary:hover{background:#fff;transform:translateX(3px)}
+.pill:disabled{opacity:.35;pointer-events:none}
+
+/* slides */
+.slide{position:absolute;inset:0;visibility:hidden;opacity:0;overflow-y:auto;overflow-x:hidden;padding:clamp(4.5rem,13vh,7rem) clamp(1.25rem,8vw,8.28rem) clamp(5rem,12vh,6.5rem);transition:opacity .6s,visibility 0s .6s;display:flex}
+.slide.on{visibility:visible;opacity:1;transition-delay:0s}
+.wrap{margin:auto;width:100%;max-width:1180px}
+.r{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+.on .r{opacity:1;transform:none;transition-delay:calc(var(--i,0)*100ms + 250ms)}
+
+/* type */
+.tag{font-size:.8125rem;font-weight:500;text-transform:uppercase;letter-spacing:.12em;margin-bottom:1.6rem;display:flex;align-items:center;gap:.8rem}
+.tag::before{content:"";width:2rem;height:1px;background:#fff}
+.hero{font-size:clamp(2.8rem,min(9.5vw,17vh),8.5625rem);font-weight:700;line-height:1;letter-spacing:-.02em}
+.on .hero{animation:settle 1.6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes settle{from{letter-spacing:.06em;opacity:0}to{letter-spacing:-.02em;opacity:1}}
+.disp{font-size:clamp(2.2rem,min(6.4vw,11vh),5.5rem);font-weight:500;line-height:1;letter-spacing:-.0057em}
+.head{font-size:clamp(1.7rem,min(4vw,6.4vh),3rem);font-weight:500;line-height:1.12;letter-spacing:-.01em}
+.sub{font-size:clamp(1.2rem,2.6vw,1.875rem);font-weight:500;line-height:1.15}
+.cap{font-size:.8125rem;font-weight:500;color:var(--mut)}
+.body{color:var(--mut);max-width:34rem}
+.center .sub{margin-top:1.6rem}
+.row{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;margin-top:2.6rem}
+.team{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);display:inline-block}
+
+/* grids */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem}
+.mt{margin-top:clamp(1.5rem,5vh,3.5rem)}
+.item{border-top:1px solid var(--line);padding-top:1.1rem}
+.item .n{font-size:.8125rem;font-weight:500;margin-bottom:.9rem;display:block}
+.item h3{font-size:1.25rem;font-weight:500;line-height:1.2;margin-bottom:.55rem}
+.item p{font-size:.95rem;color:var(--mut);line-height:1.5}
+.on .item{animation:draw .9s ease both}
+.item{position:relative}
+.item::before{content:"";position:absolute;top:-1px;left:0;height:1px;width:0;background:#fff;transition:width 1.2s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--i,0)*100ms + 500ms)}
+.on .item::before{width:100%}
+@keyframes draw{from{opacity:0}to{opacity:1}}
+
+/* demo box */
+.box{border:1px solid #fff;padding:1.8rem}
+.box .q{font-size:1.2rem;line-height:1.9;font-weight:400}
+.t{padding:.05rem .3rem;border-radius:3px;border:1px dashed #fff}
+.t.neg{background:#fff;color:#000;border-color:#fff}
+.legend{display:flex;gap:1.4rem;margin-top:1.1rem;flex-wrap:wrap}
+.verdict{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--line);gap:1rem;flex-wrap:wrap}
+.vp{background:#fff;color:#000;border-radius:999px;padding:.35rem 1rem;font-size:.8125rem;font-weight:600}
+.wrong{text-decoration:line-through;color:var(--mut)}
+
+/* formula */
+.fx{border:1px solid #fff;border-radius:999px;display:inline-block;padding:.9rem 2rem;font-size:clamp(1rem,2.2vw,1.5rem);font-weight:500;margin:1.8rem 0 0}
+.fx2{font-size:clamp(.95rem,1.8vw,1.2rem);margin-top:1rem;color:var(--mut)}
+.chips{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.4rem}
+.chip{border:1px solid #fff;border-radius:999px;height:2.2rem;padding:0 1rem;display:inline-flex;align-items:center;font-size:.8125rem;font-weight:500}
+.chip.f{background:#fff;color:#000}
+
+/* stats */
+.stat .v{font-size:clamp(2.2rem,5vw,4rem);font-weight:700;line-height:1;letter-spacing:-.02em}
+.stat .l{font-size:.85rem;color:var(--mut);margin-top:.6rem;line-height:1.4}
+
+/* bars */
+.bars{display:grid;gap:1.15rem}
+.br .h{display:flex;justify-content:space-between;font-size:.9rem;font-weight:500;margin-bottom:.45rem}
+.br .t2{height:6px;background:var(--surface);border-radius:999px;overflow:hidden}
+.br .t2 i{display:block;height:100%;width:0;background:#fff;border-radius:999px;transition:width 1.6s cubic-bezier(.2,.7,.2,1) .8s}
+.on .br .t2 i{width:var(--w)}
+.seg{display:flex;height:2.4rem;gap:3px;margin-top:.5rem}
+.seg span{display:flex;align-items:center;padding-left:.8rem;font-size:.75rem;font-weight:600;border:1px solid #fff;border-radius:6px;width:0;overflow:hidden;white-space:nowrap;transition:width 1.4s cubic-bezier(.2,.7,.2,1) 1s}
+.seg span:first-child{background:#fff;color:#000}
+.on .seg span{width:var(--w)}
+.big{font-size:clamp(4rem,min(11vw,20vh),9rem);font-weight:700;line-height:.95;letter-spacing:-.02em}
+.sec{font-size:.8125rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;margin:1.8rem 0 .9rem}
+
+/* pipeline */
+.pipe{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:1.2rem;padding-top:2.2rem}
+.pipe::before,.pipe::after{content:"";position:absolute;top:.45rem;left:0;height:1px}
+.pipe::before{right:0;background:var(--line)}
+.pipe::after{width:0;background:#fff;transition:width 3s cubic-bezier(.5,0,.2,1) .8s}
+.on .pipe::after{width:100%}
+.st{position:relative}
+.st::before{content:"";position:absolute;top:-2.2rem;left:0;width:11px;height:11px;border-radius:50%;background:#000;border:1px solid #fff;transform:scale(0);transition:transform .5s,background .4s;transition-delay:calc(var(--i)*.5s + .8s)}
+.on .st::before{transform:scale(1);background:#fff}
+.st b{display:block;font-size:1rem;font-weight:600;margin-bottom:.4rem}
+.st p{font-size:.85rem;color:var(--mut);line-height:1.45}
+.loop{margin-top:2rem;display:flex;align-items:center;gap:1rem;font-size:.875rem;font-weight:500}
+.loop::before{content:"↺";font-size:1.5rem;display:inline-block;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+
+/* team */
+.person{display:flex;align-items:center;gap:1rem;padding:1rem 0;border-top:1px solid var(--line)}
+.av{width:2.6rem;height:2.6rem;border-radius:50%;border:1px solid #fff;display:grid;place-items:center;font-size:.875rem;font-weight:600;flex:none}
+.person b{font-weight:500;font-size:1.15rem}
+.ul{list-style:none;margin-top:1.2rem;display:grid;gap:.55rem;font-size:.95rem;color:var(--mut)}
+.ul li::before{content:"→ ";color:#fff}
+
+@media(max-width:860px){
+.g2{grid-template-columns:1fr;gap:2rem}
+.g3,.g4{grid-template-columns:1fr 1fr;gap:1.6rem}
+.pipe{grid-template-columns:1fr 1fr;row-gap:2.6rem}
+.pipe::before,.pipe::after{display:none}
+.st::before{top:-1.4rem}
+.top,.bottom{padding-left:1.25rem;padding-right:1.25rem}
+.hide-s{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation-duration:.01s!important;transition-delay:0s!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="brand"><i></i><span>Hate Speech NLP</span></div><span class="cap mono" id="cnt">01 / 07</span></header>
+
+<!-- 1 TITLE -->
+<section class="slide on" data-t="Title"><div class="wrap center">
+<p class="tag r" style="--i:0">NLP Project · Bennett University</p>
+<h1 class="hero">Hate Speech<br>Detection.</h1>
+<p class="sub r" style="--i:3">Explainable AI &amp; Reward‑Optimized LLMs</p>
+<div class="row r" style="--i:4"><button class="pill primary" onclick="go(1)">Begin <span>→</span></button><span class="cap">Supervised by Dr. Pradeepika Verma</span></div>
+<p class="cap team r" style="--i:5">Ayush Tiwari · Aayush Adhikari · Nakshatra Gupta · Vardhak Sharma</p>
+</div></section>
+
+<!-- 2 INTRODUCTION -->
+<section class="slide" data-t="Introduction"><div class="wrap g2">
+<div>
+<p class="tag r" style="--i:0">Introduction</p>
+<h2 class="head r" style="--i:1">Hate spreads fast online. Most detectors can’t tell you <em style="font-style:normal;text-decoration:underline;text-underline-offset:.2em">why</em> they flagged a post.</h2>
+<p class="body r mt" style="--i:2">We built a system that detects hate speech, explains its decision word by word, and keeps learning from human feedback.</p>
+<div class="chips r" style="--i:3"><span class="chip">English</span><span class="chip">Hindi</span><span class="chip">Hinglish</span><span class="chip f">Memes + text</span></div>
+</div>
+<div class="r" style="--i:3">
+<p class="cap" style="margin-bottom:.8rem">LIVE EXAMPLE · quotation of hate, used as counterspeech</p>
+<div class="box">
+<p class="q">Someone wrote “these immigrants are vermin” which is completely <span class="t neg">unacceptable</span> <span class="t">racist</span> hate speech.</p>
+<div class="legend"><span class="cap"><span class="t neg">word</span> lowers hate score</span><span class="cap"><span class="t">word</span> raises hate score</span></div>
+<div class="verdict"><span class="cap">Keyword filter: <span class="wrong">HATEFUL</span></span><span><span class="vp">NON‑HATEFUL · 100%</span></span></div>
+</div>
+<p class="cap" style="margin-top:.9rem">Context blindness is the first failure we fix.</p>
+</div>
+</div></section>
+
+<!-- 3 PROBLEM -->
+<section class="slide" data-t="Problem"><div class="wrap">
+<p class="tag r" style="--i:0">Problem Statement</p>
+<h2 class="disp r" style="--i:1">Hate is multimodal.<br>Detectors aren’t.</h2>
+<div class="r" style="--i:2"><div class="fx mono">fθ(xᵢ) → yᵢ &nbsp;&nbsp; yᵢ ∈ {0, 1}</div><p class="fx2 mono">xᵢ = { Tᵢ text, Vᵢ image / meme, Cᵢ context }&nbsp; · &nbsp;0 = non‑hateful, 1 = hateful</p></div>
+<div class="g4 mt">
+<div class="item r" style="--i:3"><span class="n mono">01</span><h3>Low‑resource gap</h3><p>Built for English text only. Hindi and Hinglish code‑mixed posts break them.</p></div>
+<div class="item r" style="--i:4"><span class="n mono">02</span><h3>Memes ignored</h3><p>Text can look harmless until paired with a hostile image.</p></div>
+<div class="item r" style="--i:5"><span class="n mono">03</span><h3>Black boxes</h3><p>No one can see why a post was flagged, so nobody trusts it.</p></div>
+<div class="item r" style="--i:6"><span class="n mono">04</span><h3>Bias &amp; no learning</h3><p>Unfair across languages, and static after training.</p></div>
+</div>
+</div></section>
+
+<!-- 4 SOLUTION -->
+<section class="slide" data-t="Solution"><div class="wrap">
+<p class="tag r" style="--i:0">Our Solution</p>
+<h2 class="disp r" style="--i:1">Detect. Explain. Improve.</h2>
+<div class="g4 mt">
+<div class="item r" style="--i:2"><span class="n mono">01</span><h3>Multilingual Transformer</h3><p>BiLSTM + multi‑head attention with char n‑grams. Handles Devanagari and Hinglish natively.</p></div>
+<div class="item r" style="--i:3"><span class="n mono">02</span><h3>Multimodal OCR fusion</h3><p>EasyOCR reads text inside memes. Cross‑attention joins it with image features.</p></div>
+<div class="item r" style="--i:4"><span class="n mono">03</span><h3>Faithful XAI</h3><p>Leave‑one‑out token scores, checked with AOPC. Every verdict comes with evidence.</p></div>
+<div class="item r" style="--i:5"><span class="n mono">04</span><h3>Reward + DPO</h3><p>Human corrections become preference pairs. Regressing models never go live.</p></div>
+</div>
+<div class="g4 mt">
+<div class="stat r" style="--i:6"><div class="v"><span data-n="100" data-d="0">100</span>%</div><div class="l">Transformer accuracy<br>(1,050‑sample benchmark)</div></div>
+<div class="stat r" style="--i:7"><div class="v"><span data-n="98.7" data-d="1">98.7</span>%</div><div class="l">TF‑IDF baseline<br>for comparison</div></div>
+<div class="stat r" style="--i:8"><div class="v"><span data-n="0" data-d="3">0.000</span></div><div class="l">Equalized‑odds gap<br>across 3 language groups</div></div>
+<div class="stat r" style="--i:9"><div class="v"><span data-n="40" data-d="0">40</span>/40</div><div class="l">Automated tests<br>passing</div></div>
+</div>
+</div></section>
+
+<!-- 5 DATASET -->
+<section class="slide" data-t="Dataset"><div class="wrap g2">
+<div>
+<p class="tag r" style="--i:0">Dataset</p>
+<div class="big r" style="--i:1"><span data-n="1050" data-d="0" data-c="1">1,050</span></div>
+<p class="sub r" style="--i:2" >labelled samples</p>
+<p class="body r mt" style="--i:3">Three public sources, chosen so every part of our problem is covered: code‑mixed language, explainable labels, and image + text content.</p>
+<div class="chips r" style="--i:4"><span class="chip">Binary label: 0 / 1</span><span class="chip">Stratified split</span></div>
+</div>
+<div>
+<p class="sec r" style="--i:2;margin-top:0">Sources · why we use them</p>
+<div class="bars r" style="--i:3">
+<div class="br"><div class="h"><span>HASOC Hi‑En <span class="cap">· Hindi, English, Hinglish</span></span><span class="mono">840</span></div><div class="t2"><i style="--w:100%"></i></div></div>
+<div class="br"><div class="h"><span>HateXplain <span class="cap">· word‑level rationales</span></span><span class="mono">210</span></div><div class="t2"><i style="--w:25%"></i></div></div>
+<div class="br"><div class="h"><span>Multimodal Memes <span class="cap">· image + text</span></span><span class="mono">50</span></div><div class="t2"><i style="--w:6%"></i></div></div>
+</div>
+<p class="sec r" style="--i:4">Split · class ratio preserved</p>
+<div class="seg r" style="--i:5"><span style="--w:70%">Train 70%</span><span style="--w:15%">Val 15%</span><span style="--w:15%">Test 15%</span></div>
+<p class="sec r" style="--i:6">Test samples per language</p>
+<div class="g3 r" style="--i:7;gap:1rem"><div class="stat"><div class="v" style="font-size:2rem">52</div><div class="l">English</div></div><div class="stat"><div class="v" style="font-size:2rem">54</div><div class="l">Hindi</div></div><div class="stat"><div class="v" style="font-size:2rem">53</div><div class="l">Hinglish</div></div></div>
+</div>
+</div></section>
+
+<!-- 6 METHODOLOGY -->
+<section class="slide" data-t="Methodology"><div class="wrap">
+<p class="tag r" style="--i:0">Methodology</p>
+<h2 class="disp r" style="--i:1">Six steps, one loop.</h2>
+<div class="pipe mt" style="margin-top:3.2rem">
+<div class="st r" style="--i:2"><b>1 · Input</b><p>Text, image, conversation context</p></div>
+<div class="st r" style="--i:3"><b>2 · Preprocess</b><p>NFKC normalize, script detect, EasyOCR, resize 224×224</p></div>
+<div class="st r" style="--i:4"><b>3 · Encode</b><p>BiLSTM + attention, TF‑IDF baseline, CNN for images</p></div>
+<div class="st r" style="--i:5"><b>4 · Fuse</b><p>Cross‑attention with sigmoid gate</p></div>
+<div class="st r" style="--i:6"><b>5 · Predict</b><p>Guardrail, then label + confidence</p></div>
+<div class="st r" style="--i:7"><b>6 · Explain</b><p>Leave‑one‑out scores, AOPC faithfulness</p></div>
+</div>
+<div class="loop r" style="--i:8">Feedback → Reward → DPO → new checkpoint → tested against a held‑out set before deploy</div>
+<p class="sec r" style="--i:9">Reward vector</p>
+<div class="chips r mono" style="--i:9;margin-top:0"><span class="chip f">0.35 · classification</span><span class="chip">0.25 · explanation</span><span class="chip">0.15 · context</span><span class="chip">0.25 · human feedback</span><span class="chip">− 0.50 · overconfidence</span></div>
+<p class="cap r" style="--i:10;margin-top:1.2rem">Stack: PyTorch · FastAPI · EasyOCR · scikit‑learn · SQLite</p>
+</div></section>
+
+<!-- 7 CONTRIBUTIONS -->
+<section class="slide" data-t="Contributions"><div class="wrap">
+<p class="tag r" style="--i:0">Individual Contributions</p>
+<h2 class="disp r" style="--i:1">Who built what.</h2>
+<div class="g2 mt" style="align-items:start;gap:4rem">
+<div class="r" style="--i:2">
+<p class="sub">UI &amp; Text Features</p>
+<ul class="ul"><li>ThoughtStream dashboard with 11 labs and dark mode</li><li>Detection Studio with token heatmaps</li><li>Text features: TF‑IDF word + char n‑grams, transformer inputs</li></ul>
+<div style="margin-top:1.6rem"><div class="person"><span class="av">AT</span><b>Ayush Tiwari</b></div><div class="person"><span class="av">AA</span><b>Aayush Adhikari</b></div></div>
+</div>
+<div class="r" style="--i:3">
+<p class="sub">OCR, Dataset &amp; Preprocessing</p>
+<ul class="ul"><li>EasyOCR text extraction from memes</li><li>Dataset curation and stratified 70/15/15 split</li><li>Unicode normalization, script and language detection</li></ul>
+<div style="margin-top:1.6rem"><div class="person"><span class="av">NG</span><b>Nakshatra Gupta</b></div><div class="person"><span class="av">VS</span><b>Vardhak Sharma</b></div></div>
+</div>
+</div>
+<p class="cap r mt" style="--i:5;text-align:center">Thank you · Questions?</p>
+</div></section>
+
+<footer class="bottom">
+<button class="pill" id="pv" onclick="go(i-1)">← <span class="hide-s">Back</span></button>
+<div class="prog"><b id="pg"></b></div>
+<button class="pill primary" id="nx" onclick="go(i+1)"><span class="hide-s">Next</span> →</button>
+</footer>
+
+<script>
+var S=[].slice.call(document.querySelectorAll('.slide')),i=0,reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function fmt(v,d,c){var s=v.toFixed(d);return c?Number(s).toLocaleString('en-US'):s}
+function count(sl){
+  sl.querySelectorAll('[data-n]').forEach(function(el){
+    var t=parseFloat(el.dataset.n),d=+el.dataset.d,c=el.dataset.c,t0=null;
+    if(reduce){el.textContent=fmt(t,d,c);return}
+    el.textContent=fmt(0,d,c);
+    function f(ts){if(!t0)t0=ts;var p=Math.min((ts-t0-600)/1600,1);if(p<0){requestAnimationFrame(f);return}
+      el.textContent=fmt(t*(1-Math.pow(1-p,3)),d,c);if(p<1)requestAnimationFrame(f)}
+    requestAnimationFrame(f);
+  });
+}
+function go(n){
+  if(n<0||n>=S.length)return;
+  i=n;
+  S.forEach(function(s,k){s.classList.toggle('on',k===n)});
+  S[n].scrollTop=0;count(S[n]);
+  document.getElementById('cnt').textContent=('0'+(n+1)).slice(-2)+' / 0'+S.length;
+  document.getElementById('pg').style.width=((n+1)/S.length*100)+'%';
+  document.getElementById('pv').disabled=n===0;
+  document.getElementById('nx').disabled=n===S.length-1;
+}
+document.addEventListener('keydown',function(e){
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].indexOf(e.key)>-1){e.preventDefault();go(i+1)}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].indexOf(e.key)>-1){e.preventDefault();go(i-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(S.length-1);
+});
+var sx=0;
+document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',function(e){var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>60)go(i+(d<0?1:-1))},{passive:true});
+go(0);
+</script>
+</body>
+</html>
